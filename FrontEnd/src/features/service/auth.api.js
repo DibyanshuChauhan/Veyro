@@ -21,3 +21,18 @@ export const registerUser = async ({ email, contact, password, fullname, isSelle
         });
     }
 }
+
+export const loginuser = async ({ email, password }) => {
+    try {
+        const response = await api.post("/login", {
+            email,
+            password
+        });
+        return response.data;
+    }
+    catch (error) {
+        throw new Error("Login failed", {
+            cause: error
+        })
+    }
+}
