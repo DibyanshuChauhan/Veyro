@@ -1,9 +1,11 @@
 import { useState } from 'react';
+import { useNavigate } from "react-router-dom";
 import { Link } from 'react-router-dom';
 import { useAuth } from "../../hook/useAuth";
 
 export default function Register() {
 
+  const navigate = useNavigate();
   const { handleRegister } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -26,6 +28,7 @@ export default function Register() {
     e.preventDefault();
     console.log("Submitting Registration Data:", formData);
     await handleRegister(formData);
+    navigate("/");
     // TODO: Send formData to your API or Redux action (e.g. registerUser(formData))
   };
 
