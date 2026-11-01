@@ -21,7 +21,7 @@ async function sendTokenResponse (user, res, message) {
         message,
         success: true,
         user: {
-            id: user_id,
+            id: user._id,
             email: user.email,
             contact: user.contact,
             fullname: user.fullname,

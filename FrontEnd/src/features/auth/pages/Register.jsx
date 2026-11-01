@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from "../../hook/useAuth";
 
 export default function Register() {
+
+  const { handleRegister } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     fullname: "",
-    contactNumber: "",
+    contact: "",
     email: "",
     password: "",
     isSeller: false
@@ -19,9 +22,10 @@ export default function Register() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     console.log("Submitting Registration Data:", formData);
+    await handleRegister(formData);
     // TODO: Send formData to your API or Redux action (e.g. registerUser(formData))
   };
 
@@ -239,7 +243,7 @@ export default function Register() {
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <label
-                      htmlFor="contactNumber"
+                      htmlFor="contact"
                       className="block text-[10px] font-semibold tracking-[0.25em] text-[#a1a1aa] uppercase"
                     >
                       Contact Number <span className="text-[#d4af37]">*</span>
@@ -255,11 +259,11 @@ export default function Register() {
                       </svg>
                     </span>
                     <input
-                      id="contactNumber"
-                      name="contactNumber"
+                      id="contact"
+                      name="contact"
                       type="tel"
                       required
-                      value={formData.contactNumber}
+                      value={formData.contact}
                       onChange={handleChange}
                       placeholder="+1 (555) 019-2834"
                       className="w-full bg-transparent py-3.5 pr-4 text-sm text-[#f4f4f5] placeholder:text-[#52525b] border-0 focus:outline-none focus:ring-0 tracking-wider font-light"
