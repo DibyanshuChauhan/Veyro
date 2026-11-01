@@ -3,6 +3,27 @@ import { Link } from 'react-router-dom';
 
 export default function Register() {
   const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({
+    fullname: "",
+    contactNumber: "",
+    email: "",
+    password: "",
+    isSeller: false
+  });
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log("Submitting Registration Data:", formData);
+    // TODO: Send formData to your API or Redux action (e.g. registerUser(formData))
+  };
 
   return (
     <div className="min-h-screen bg-[#08080a] text-[#e5e1e4] flex flex-col font-sans-luxury selection:bg-[#d4af37] selection:text-[#09090b]">
@@ -48,7 +69,7 @@ export default function Register() {
       {/* Main Registration Showcase */}
       <main className="flex-grow flex items-center justify-center px-4 sm:px-8 lg:px-16 py-12 lg:py-20">
         <div className="w-full max-w-[1360px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-stretch">
-          
+
           {/* Left Column: Editorial Runway Visual & Brand Heritage */}
           <section className="lg:col-span-5 xl:col-span-6 relative flex flex-col justify-between bg-[#111115] border border-[#232329] p-8 sm:p-12 overflow-hidden champagne-glow min-h-[580px] lg:min-h-[760px]">
             {/* Background Editorial Image Layer */}
@@ -156,8 +177,10 @@ export default function Register() {
               </header>
 
               {/* Pure Registration Form UI */}
-              <form className="space-y-6">
-                
+              <form
+                onSubmit={handleSubmit}
+                className="space-y-6">
+
                 {/* Field 1: Full Name */}
                 <div className="space-y-2">
                   <label
@@ -177,6 +200,8 @@ export default function Register() {
                       name="fullname"
                       type="text"
                       required
+                      value={formData.fullname}
+                      onChange={handleChange}
                       placeholder="Julian Sterling"
                       className="w-full bg-transparent py-3.5 pr-4 text-sm text-[#f4f4f5] placeholder:text-[#52525b] border-0 focus:outline-none focus:ring-0 tracking-wide font-light"
                     />
@@ -202,6 +227,8 @@ export default function Register() {
                       name="email"
                       type="email"
                       required
+                      value={formData.email}
+                      onChange={handleChange}
                       placeholder="julian.sterling@atelier.com"
                       className="w-full bg-transparent py-3.5 pr-4 text-sm text-[#f4f4f5] placeholder:text-[#52525b] border-0 focus:outline-none focus:ring-0 tracking-wide font-light"
                     />
@@ -232,6 +259,8 @@ export default function Register() {
                       name="contactNumber"
                       type="tel"
                       required
+                      value={formData.contactNumber}
+                      onChange={handleChange}
                       placeholder="+1 (555) 019-2834"
                       className="w-full bg-transparent py-3.5 pr-4 text-sm text-[#f4f4f5] placeholder:text-[#52525b] border-0 focus:outline-none focus:ring-0 tracking-wider font-light"
                     />
@@ -263,6 +292,8 @@ export default function Register() {
                       name="password"
                       type={showPassword ? 'text' : 'password'}
                       required
+                      value={formData.password}
+                      onChange={handleChange}
                       placeholder="••••••••••••••••"
                       className="w-full bg-transparent py-3.5 pr-11 text-sm text-[#f4f4f5] placeholder:text-[#52525b] border-0 focus:outline-none focus:ring-0 tracking-wider font-light"
                     />
@@ -297,6 +328,8 @@ export default function Register() {
                         id="isSeller"
                         name="isSeller"
                         type="checkbox"
+                        checked={formData.isSeller}
+                        onChange={handleChange}
                         className="w-4 h-4 rounded-none accent-[#d4af37] bg-[#09090b] border-[#52525b] focus:ring-0 cursor-pointer"
                       />
                     </div>
