@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 export default function Register() {
@@ -29,7 +29,7 @@ export default function Register() {
     <div className="min-h-screen bg-[#08080a] text-[#e5e1e4] flex flex-col font-sans-luxury selection:bg-[#d4af37] selection:text-[#09090b]">
       {/* Editorial Top Navigation Bar */}
       <header className="sticky top-0 z-50 w-full bg-[#08080a]/90 backdrop-blur-md border-b border-[#202026]">
-        <div className="max-w-[1440px] mx-auto px-6 sm:px-10 lg:px-16 py-4 flex items-center justify-between">
+        <div className="max-w-360 mx-auto px-6 sm:px-10 lg:px-16 py-4 flex items-center justify-between">
           {/* Brand Wordmark */}
           <div className="flex items-center gap-4">
             <Link
@@ -67,11 +67,11 @@ export default function Register() {
       </header>
 
       {/* Main Registration Showcase */}
-      <main className="flex-grow flex items-center justify-center px-4 sm:px-8 lg:px-16 py-12 lg:py-20">
-        <div className="w-full max-w-[1360px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-stretch">
+      <main className="grow flex items-center justify-center px-4 sm:px-8 lg:px-16 py-12 lg:py-20">
+        <div className="w-full max-w-340 mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-stretch">
 
           {/* Left Column: Editorial Runway Visual & Brand Heritage */}
-          <section className="lg:col-span-5 xl:col-span-6 relative flex flex-col justify-between bg-[#111115] border border-[#232329] p-8 sm:p-12 overflow-hidden champagne-glow min-h-[580px] lg:min-h-[760px]">
+          <section className="lg:col-span-5 xl:col-span-6 relative flex flex-col justify-between bg-[#111115] border border-[#232329] p-8 sm:p-12 overflow-hidden champagne-glow min-h-145 lg:min-h-190">
             {/* Background Editorial Image Layer */}
             <div className="absolute inset-0 z-0">
               <img
@@ -79,7 +79,7 @@ export default function Register() {
                 alt="Veyro Haute Couture Editorial"
                 className="w-full h-full object-cover object-top opacity-50 filter brightness-[0.75] contrast-[1.1] transition-transform duration-1000 ease-out hover:scale-105"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d10] via-[#0d0d10]/70 to-[#0d0d10]/40" />
+              <div className="absolute inset-0 bg-linear-to-t from-[#0d0d10] via-[#0d0d10]/70 to-[#0d0d10]/40" />
               <div className="absolute -top-32 -left-32 w-80 h-80 rounded-full bg-[#d4af37]/10 blur-[130px] pointer-events-none" />
             </div>
 
@@ -158,12 +158,12 @@ export default function Register() {
           <section className="lg:col-span-7 xl:col-span-6 flex flex-col justify-center">
             <div className="bg-[#121216] border border-[#232329] p-8 sm:p-12 lg:p-14 champagne-glow relative">
               {/* Golden Hairline Accent Line */}
-              <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#d4af37] to-transparent opacity-90" />
+              <div className="absolute top-0 left-0 right-0 h-0.5 bg-linear-to-r from-transparent via-[#d4af37] to-transparent opacity-90" />
 
               {/* Form Header with Breathing Space */}
               <header className="mb-9">
                 <div className="flex items-center gap-2 mb-2.5">
-                  <span className="w-2.5 h-[1px] bg-[#d4af37]" />
+                  <span className="w-2.5 h-px bg-[#d4af37]" />
                   <span className="text-[10px] font-semibold tracking-[0.3em] text-[#d4af37] uppercase">
                     CLIENT REGISTRY
                   </span>
@@ -334,7 +334,7 @@ export default function Register() {
                       />
                     </div>
 
-                    <div className="flex-grow">
+                    <div className="grow">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <span className="text-sm font-medium text-[#f4f4f5] group-hover:text-[#d4af37] transition-colors">
                           Register as a Seller / Designer
@@ -397,7 +397,7 @@ export default function Register() {
 
       {/* Luxury Atelier Footer */}
       <footer className="w-full bg-[#08080a] border-t border-[#1e1e24] py-8 px-6 sm:px-10 lg:px-16 mt-auto">
-        <div className="max-w-[1440px] mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+        <div className="max-w-360 mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
             <span className="font-serif-luxury text-lg tracking-[0.2em] text-[#f4f4f5] uppercase select-none">
               VEYRO
