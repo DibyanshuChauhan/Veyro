@@ -1,1 +1,31 @@
 @import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: #09090b;
+    color: #e5e1e4;
+    overflow-x: hidden;
+  }
+}
+
+.font-serif-luxury {
+  font-family: 'Bodoni Moda', serif;
+}
+
+.font-sans-luxury {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* Subtle Atelier Lighting Glow */
+.champagne-glow {
+  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.9), 0 0 40px 0 rgba(212, 175, 55, 0.06);
+}
+
+.champagne-glow-hover:hover {
+  box-shadow: 0 0 30px -5px rgba(212, 175, 55, 0.25);
+}
+
+.gold-gradient-border {
+  background: linear-gradient(90deg, transparent, #d4af37, #f2ca50, transparent);
+}
