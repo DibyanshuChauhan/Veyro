@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from "../../hook/useAuth";
+import { useNavigate } from "react-router-dom";
+
 export default function Login() {
 
+  const navigate = useNavigate();
   const { handleLogin } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -23,6 +26,7 @@ export default function Login() {
     e.preventDefault();
     handleLogin({ email: formData.email, password: formData.password });    
     console.log("Submitting Login UI Data:", formData);
+    navigate("/");
   };
 
   return (

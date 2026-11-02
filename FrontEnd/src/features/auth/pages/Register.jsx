@@ -28,7 +28,7 @@ export default function Register() {
     e.preventDefault();
     console.log("Submitting Registration Data:", formData);
     await handleRegister(formData);
-    navigate("/");
+    navigate("/login");
     // TODO: Send formData to your API or Redux action (e.g. registerUser(formData))
   };
 
