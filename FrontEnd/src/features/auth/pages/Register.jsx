@@ -64,7 +64,7 @@ export default function Register() {
               EN / USD
             </span>
             <Link
-              to="/"
+              to="/login"
               className="text-[11px] font-medium tracking-[0.2em] text-[#d4af37] hover:text-[#f4f4f5] border border-[#d4af37]/40 hover:border-[#d4af37] px-4 py-2 transition-all uppercase"
             >
               Sign In
@@ -380,7 +380,7 @@ export default function Register() {
                   <p className="text-xs text-[#a1a1aa] font-light">
                     Already hold an archival membership?{' '}
                     <Link
-                      to="/"
+                      to="/login"
                       className="text-[#d4af37] hover:text-[#f2ca50] font-medium underline underline-offset-4 transition-colors ml-1"
                     >
                       Sign In
