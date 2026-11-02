@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Link } from 'react-router-dom';
 import { useAuth } from "../../hook/useAuth";
 import GoogleCallback from "../components/GoogleCallback";
+import AuthHeader from "../components/AuthHeader";
+import AuthFooter from "../components/AuthFooter";
 
 export default function Register() {
 
@@ -35,44 +37,7 @@ export default function Register() {
 
   return (
     <div className="min-h-screen bg-[#08080a] text-[#e5e1e4] flex flex-col font-sans-luxury selection:bg-[#d4af37] selection:text-[#09090b]">
-      {/* Editorial Top Navigation Bar */}
-      <header className="sticky top-0 z-50 w-full bg-[#08080a]/90 backdrop-blur-md border-b border-[#202026]">
-        <div className="max-w-360 mx-auto px-6 sm:px-10 lg:px-16 py-4 flex items-center justify-between">
-          {/* Brand Wordmark */}
-          <div className="flex items-center gap-4">
-            <Link
-              to="/"
-              className="font-serif-luxury text-2xl sm:text-3xl tracking-[0.25em] text-[#f4f4f5] hover:text-[#d4af37] transition-colors uppercase select-none"
-            >
-              VEYRO
-            </Link>
-            <span className="hidden md:inline-block text-[10px] font-medium tracking-[0.25em] text-[#71717a] border-l border-[#27272a] pl-4">
-              HAUTE COUTURE ARCHIVE
-            </span>
-          </div>
-
-          {/* Minimalist Navigation */}
-          <nav className="hidden lg:flex items-center space-x-10 text-[11px] font-medium tracking-[0.2em] text-[#a1a1aa] uppercase">
-            <span className="hover:text-[#f4f4f5] cursor-pointer transition-colors">Collections</span>
-            <span className="hover:text-[#f4f4f5] cursor-pointer transition-colors">Atelier</span>
-            <span className="hover:text-[#f4f4f5] cursor-pointer transition-colors">Archives</span>
-            <span className="hover:text-[#f4f4f5] cursor-pointer transition-colors">Editorial</span>
-          </nav>
-
-          {/* Right Action */}
-          <div className="flex items-center space-x-6">
-            <span className="hidden sm:inline-block text-[11px] font-medium tracking-[0.2em] text-[#71717a] hover:text-[#d4af37] cursor-pointer transition-colors">
-              EN / USD
-            </span>
-            <Link
-              to="/login"
-              className="text-[11px] font-medium tracking-[0.2em] text-[#d4af37] hover:text-[#f4f4f5] border border-[#d4af37]/40 hover:border-[#d4af37] px-4 py-2 transition-all uppercase"
-            >
-              Sign In
-            </Link>
-          </div>
-        </div>
-      </header>
+      <AuthHeader actionLabel="Sign In" actionTo="/login" />
 
       {/* Main Registration Showcase */}
       <main className="grow flex items-center justify-center px-4 sm:px-8 lg:px-16 py-12 lg:py-20">
@@ -408,26 +373,7 @@ export default function Register() {
         </div>
       </main>
 
-      {/* Luxury Atelier Footer */}
-      <footer className="w-full bg-[#08080a] border-t border-[#1e1e24] py-8 px-6 sm:px-10 lg:px-16 mt-auto">
-        <div className="max-w-360 mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
-            <span className="font-serif-luxury text-lg tracking-[0.2em] text-[#f4f4f5] uppercase select-none">
-              VEYRO
-            </span>
-            <span className="text-[11px] text-[#71717a] tracking-wider">
-              © {new Date().getFullYear()} VEYRO ATELIER. ALL RIGHTS RESERVED. ARCHIVAL PRESERVATION & CURATION.
-            </span>
-          </div>
-
-          <div className="flex flex-wrap items-center justify-center gap-6 text-[10px] font-medium tracking-[0.2em] text-[#a1a1aa] uppercase">
-            <span className="hover:text-[#d4af37] cursor-pointer transition-colors">Client Service</span>
-            <span className="hover:text-[#d4af37] cursor-pointer transition-colors">Legal & Regulatory</span>
-            <span className="hover:text-[#d4af37] cursor-pointer transition-colors">Privacy Protocol</span>
-            <span className="hover:text-[#d4af37] cursor-pointer transition-colors">Bespoke Inquiries</span>
-          </div>
-        </div>
-      </footer>
+      <AuthFooter />
     </div>
   );
 }
