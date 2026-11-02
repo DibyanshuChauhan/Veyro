@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from "../../hook/useAuth";
-import { useNavigate } from "react-router-dom";
+import GoogleCallback from '../components/GoogleCallback';
 
 export default function Login() {
 
@@ -303,6 +303,11 @@ export default function Login() {
                     </svg>
                   </button>
                 </div>
+
+                {/* Google Authentication Button */}
+                <a className="pt-1 block" href="/api/auth/google">
+                  <GoogleCallback showDivider dividerText="OR CONTINUE WITH" text="Continue with Google" />
+                </a>
 
                 {/* Form Footer */}
                 <div className="pt-2 text-center space-y-4">

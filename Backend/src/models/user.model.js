@@ -9,11 +9,11 @@ const userSchema = new mongoose.Schema({
     },
     contact: {
         type: String,
-        required: true
+        required: false
     },
     password: {
         type: String,
-        required: true
+        required: false
     },
     fullname: {
         type: String,
@@ -40,6 +40,7 @@ userSchema.pre("save", async function () {
 })
 
 userSchema.methods.comparePassword = async function (password) {
+    if (!this.password) return false;
     try {
         return await bcrypt.compare(password, this.password);
     } catch (error) {

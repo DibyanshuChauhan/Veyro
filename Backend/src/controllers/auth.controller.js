@@ -80,3 +80,35 @@ export const LoginUser = async (req, res) => {
         res.status(500).json({ error: error.message});
     }
 }
+
+export const GoogleAuthCallback = async (req, res) => {
+    try {
+        const profile = req.user;
+        const email = profile?.emails?.[0]?.value?.toLowerCase();
+        if (!email) {
+            return res.redirect(`${config.FRONTEND_URL}/login?error=google_email_unavailable`);
+        }
+
+        let user = await userModel.findOne({ email });
+        if (!user) {
+            user = await userModel.create({
+                email,
+                fullname: profile.displayName || email.split("@")[0],
+                role: "buyer"
+            });
+        }
+
+        const token = jwt.sign({ id: user._id }, config.JWT_SECRET, { expiresIn: "7d" });
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+        return res.redirect(config.FRONTEND_URL);
+    }
+    catch (error) {
+        console.error("Google authentication failed:", error);
+        return res.redirect(`${config.FRONTEND_URL}/login?error=google_auth_failed`);
+    }
+}
