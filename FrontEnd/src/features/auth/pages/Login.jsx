@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from "../../hook/useAuth";
+import { useAuth } from "../hook/useAuth";
 import GoogleCallback from '../components/GoogleCallback';
 import AuthHeader from "../components/AuthHeader";
 import AuthFooter from "../components/AuthFooter";
