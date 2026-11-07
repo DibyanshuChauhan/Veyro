@@ -335,7 +335,7 @@ const CreateProduct = () => {
                       ${isDragOver
                         ? "border-[#d4af37] bg-[#d4af37]/5"
                         : images.length < MAX_IMAGES
-                        ? "border-[#27272a] bg-[#0c0c0f] hover:border-[#d4af37]/50 hover:bg-[#d4af37]/[0.03]"
+                        ? "border-[#27272a] bg-[#0c0c0f] hover:border-[#d4af37]/50 hover:bg-[#d4af37]/3"
                         : "border-[#1e1e24] bg-[#0a0a0d] cursor-not-allowed opacity-60"
                       }`}
                   >
