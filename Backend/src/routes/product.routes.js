@@ -13,7 +13,8 @@ const upload = multer({
 
 const productRouter = Router();
 
-productRouter.post("/", authenticateSeller, createProductValidator, upload.array("images", 7), createProduct);
+// Multer must parse multipart/form-data before express-validator reads req.body.
+productRouter.post("/", authenticateSeller, upload.array("images", 7), createProductValidator, createProduct);
 productRouter.get("/seller", authenticateSeller, getProductsBySeller);
 
 export default productRouter;

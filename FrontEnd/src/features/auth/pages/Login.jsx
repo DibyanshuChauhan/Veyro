@@ -8,8 +8,9 @@ import AuthFooter from "../components/AuthFooter";
 export default function Login() {
 
   const navigate = useNavigate();
-  const { handleLogin } = useAuth();
+  const { handleLogin, loading, error } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
+  const [localError, setLocalError] = useState("");
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -22,13 +23,23 @@ export default function Login() {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
+    if (localError) setLocalError("");
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    handleLogin({ email: formData.email, password: formData.password });    
-    console.log("Submitting Login UI Data:", formData);
-    navigate("/");
+    setLocalError("");
+    try {
+      const user = await handleLogin({ email: formData.email, password: formData.password });
+      if (user?.role === "seller" || user?.isSeller) {
+        navigate("/products/create");
+      } else {
+        navigate("/");
+      }
+    } catch (err) {
+      const msg = err?.response?.data?.error || err.message || "Invalid email or password.";
+      setLocalError(msg);
+    }
   };
 
   return (
@@ -145,6 +156,15 @@ export default function Login() {
                 </p>
               </header>
 
+              {(localError || error) && (
+                <div className="mb-6 p-4 bg-[#1c0f10] border border-[#ffb4ab]/40 text-[#ffb4ab] text-xs flex items-start gap-3">
+                  <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <span>{localError || error}</span>
+                </div>
+              )}
+
               {/* Pure Login Form UI */}
               <form onSubmit={handleSubmit} className="space-y-6">
 
@@ -255,17 +275,20 @@ export default function Login() {
                 <div className="pt-2">
                   <button
                     type="submit"
-                    className="w-full py-4 bg-[#d4af37] text-[#09090b] text-[11px] font-bold tracking-[0.28em] uppercase transition-all duration-300 hover:bg-[#f2ca50] hover:shadow-[0_0_30px_rgba(242,202,80,0.35)] active:scale-[0.99] flex items-center justify-center gap-2 group cursor-pointer"
+                    disabled={loading}
+                    className="w-full py-4 bg-[#d4af37] text-[#09090b] text-[11px] font-bold tracking-[0.28em] uppercase transition-all duration-300 hover:bg-[#f2ca50] hover:shadow-[0_0_30px_rgba(242,202,80,0.35)] active:scale-[0.99] flex items-center justify-center gap-2 group cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    <span>SIGN IN TO ATELIER</span>
-                    <svg
-                      className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                    </svg>
+                    <span>{loading ? "SIGNING IN..." : "SIGN IN TO ATELIER"}</span>
+                    {!loading && (
+                      <svg
+                        className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                    )}
                   </button>
                 </div>
 

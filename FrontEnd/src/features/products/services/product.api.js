@@ -11,9 +11,8 @@ export const createProducts = async (formData) => {
         return response.data;
     }
     catch (error) {
-        throw new Error("Can't create the product", {
-            cause: error
-        })
+        // Preserve Axios' response so the form can display backend validation errors.
+        throw error;
     }
 }
 
@@ -23,8 +22,6 @@ export const getProductsBySeller = async () => {
         return response.data;
     }
     catch (error) {
-        throw new Error("Can't view the listed products", {
-            cause: error
-        })
+        throw error;
     }
 }
