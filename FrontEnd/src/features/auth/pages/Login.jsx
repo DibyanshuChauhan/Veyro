@@ -32,7 +32,7 @@ export default function Login() {
     try {
       const user = await handleLogin({ email: formData.email, password: formData.password });
       if (user?.role === "seller" || user?.isSeller) {
-        navigate("/products/create");
+        navigate("/dashboard");
       } else {
         navigate("/");
       }

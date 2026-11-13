@@ -107,7 +107,7 @@ const CreateProduct = () => {
       await handleAddProducts(payload);
       setSuccessMessage("Product listed successfully in the Atelier!");
       setTimeout(() => {
-        navigate("/");
+        navigate("/dashboard");
       }, 1200);
     } catch (err) {
       const validationErrors = err?.response?.data?.errors;

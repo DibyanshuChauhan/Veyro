@@ -29,12 +29,17 @@ export default function AuthHeader({ actionLabel, actionTo }) {
           </span>
         </div>
 
-        <nav className="hidden lg:flex items-center space-x-10 text-[11px] font-medium tracking-[0.2em] text-[#a1a1aa] uppercase">
+        <nav className="hidden lg:flex items-center space-x-8 text-[11px] font-medium tracking-[0.2em] text-[#a1a1aa] uppercase">
           <Link to="/" className="hover:text-[#f4f4f5] transition-colors">Collections</Link>
           {isSeller && (
-            <Link to="/products/create" className="text-[#d4af37] hover:text-[#f2ca50] transition-colors flex items-center gap-1.5">
-              <span>+ Create Product</span>
-            </Link>
+            <>
+              <Link to="/dashboard" className="hover:text-[#d4af37] transition-colors">
+                Dashboard
+              </Link>
+              <Link to="/products/create" className="text-[#d4af37] hover:text-[#f2ca50] transition-colors flex items-center gap-1">
+                <span>+ New Creation</span>
+              </Link>
+            </>
           )}
           <span className="hover:text-[#f4f4f5] cursor-pointer transition-colors">Atelier</span>
           <span className="hover:text-[#f4f4f5] cursor-pointer transition-colors">Archives</span>

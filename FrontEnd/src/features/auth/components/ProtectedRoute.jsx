@@ -32,7 +32,7 @@ export function GuestRoute() {
   const user = useSelector((state) => state.auth.user);
   if (user) {
     const isSeller = Boolean(user.role === "seller" || user.isSeller === true);
-    return <Navigate to={isSeller ? "/products/create" : "/"} replace />;
+    return <Navigate to={isSeller ? "/dashboard" : "/"} replace />;
   }
   return <Outlet />;
 }

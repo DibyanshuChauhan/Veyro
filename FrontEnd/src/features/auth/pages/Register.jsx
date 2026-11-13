@@ -42,7 +42,7 @@ export default function Register() {
     try {
       const user = await handleRegister(formData);
       if (user?.role === "seller" || user?.isSeller) {
-        navigate("/products/create");
+        navigate("/dashboard");
       } else {
         navigate("/");
       }

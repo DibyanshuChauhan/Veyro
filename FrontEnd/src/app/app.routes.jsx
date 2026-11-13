@@ -2,6 +2,7 @@ import { createBrowserRouter } from "react-router-dom";
 import Register from "../features/auth/pages/Register";
 import Login from "../features/auth/pages/Login";
 import CreateProduct from "../features/products/pages/CreateProduct";
+import Dashboard from "../features/products/pages/Dashboard";
 import { SellerRoute, GuestRoute } from "../features/auth/components/ProtectedRoute";
 import Unauthorized from "./Unauthorized";
 
@@ -9,7 +10,7 @@ export const routes = createBrowserRouter([
     {
         path: "/",
         element: (
-            <div className="min-h-screen bg-[#08080a] text-[#e5e1e4] flex flex-col font-sans-luxury">
+            <div className="min-h-screen bg-[#08080a] text-[#e5e1e4] flex flex-col font-sans-luxury selection:bg-[#d4af37] selection:text-[#09090b]">
                 <main className="grow flex flex-col items-center justify-center p-8 text-center space-y-6">
                     <span className="text-[10px] font-semibold tracking-[0.3em] text-[#d4af37] uppercase">
                         Haute Couture Archive
@@ -22,10 +23,16 @@ export const routes = createBrowserRouter([
                     </p>
                     <div className="flex flex-wrap gap-4 justify-center pt-4">
                         <a
-                            href="/products/create"
+                            href="/dashboard"
                             className="py-3 px-6 bg-[#d4af37] text-[#09090b] text-[11px] font-bold tracking-[0.25em] uppercase hover:bg-[#f2ca50] transition-colors"
                         >
-                            Create Product (Seller)
+                            Seller Dashboard
+                        </a>
+                        <a
+                            href="/products/create"
+                            className="py-3 px-6 border border-[#d4af37]/60 text-[#f2ca50] text-[11px] font-bold tracking-[0.25em] uppercase hover:bg-[#d4af37] hover:text-[#09090b] transition-colors"
+                        >
+                            + Create Product
                         </a>
                         <a
                             href="/login"
@@ -60,6 +67,14 @@ export const routes = createBrowserRouter([
     {
         element: <SellerRoute />,
         children: [
+            {
+                path: "/dashboard",
+                element: <Dashboard />
+            },
+            {
+                path: "/seller/dashboard",
+                element: <Dashboard />
+            },
             {
                 path: "/products/create",
                 element: <CreateProduct />
