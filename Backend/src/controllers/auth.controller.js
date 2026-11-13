@@ -112,3 +112,21 @@ export const GoogleAuthCallback = async (req, res) => {
         return res.redirect(`${config.FRONTEND_URL}/login?error=google_auth_failed`);
     }
 }
+
+export const getCurrentUser = async (req, res) => {
+    try {
+        const user = req.user;
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+        res.status(200).json({
+            id: user._id,
+            email: user.email,
+            contact: user.contact,
+            fullname: user.fullname,
+            role: user.role
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}

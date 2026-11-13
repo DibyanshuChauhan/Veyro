@@ -6,33 +6,29 @@ const api = axios.create({
 })
 
 export const registerUser = async ({ email, contact, password, fullname, isSeller }) => {
-    try {
-        const response = await api.post("/register", {
-            email,
-            contact,
-            password,
-            fullname,
-            isSeller
-        });
-        return response.data;
-    } catch (error) {
-        throw new Error("Registration failed", {
-            cause: error 
-        });
-    }
+    const response = await api.post("/register", {
+        email,
+        contact,
+        password,
+        fullname,
+        isSeller
+    });
+    return response.data;
 }
 
 export const loginuser = async ({ email, password }) => {
-    try {
-        const response = await api.post("/login", {
-            email,
-            password
-        });
-        return response.data;
-    }
-    catch (error) {
-        throw new Error("Login failed", {
-            cause: error
-        })
-    }
+    const response = await api.post("/login", {
+        email,
+        password
+    });
+    return response.data;
+}
+
+/**
+ * Validates the current HTTP-only cookie session against the server.
+ * Returns the user object if the cookie is valid; throws (401) if not.
+ */
+export const getCurrentUser = async () => {
+    const response = await api.get("/me");
+    return response.data;
 }
