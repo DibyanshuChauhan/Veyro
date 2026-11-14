@@ -88,6 +88,17 @@ export default function BuyerHome() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Smooth scroll to target hash section on mount (e.g. /#vault or /#salon)
+  useEffect(() => {
+    if (window.location.hash) {
+      const id = window.location.hash.replace("#", "");
+      const el = document.getElementById(id);
+      if (el) {
+        setTimeout(() => el.scrollIntoView({ behavior: "smooth" }), 150);
+      }
+    }
+  }, []);
+
   // Merge live products with curated editorial showpieces
   const allCreations = useMemo(() => {
     const live = Array.isArray(catalogProducts) ? catalogProducts : [];
@@ -239,7 +250,7 @@ export default function BuyerHome() {
       </section>
 
       {/* Main Archival Vault: Curated Collections Showcase */}
-      <section id="vault" className="py-20 lg:py-28 max-w-360 mx-auto px-6 sm:px-10 lg:px-16 w-full">
+      <section id="vault" className="scroll-mt-20 py-20 lg:py-28 max-w-360 mx-auto px-6 sm:px-10 lg:px-16 w-full">
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 border-b border-[#202026] pb-8">
           <div>
@@ -334,7 +345,7 @@ export default function BuyerHome() {
       </section>
 
       {/* Private Salon Booking Section */}
-      <section id="salon" className="border-t border-[#202026] bg-[#0c0c10] py-20 lg:py-28">
+      <section id="salon" className="scroll-mt-20 border-t border-[#202026] bg-[#0c0c10] py-20 lg:py-28">
         <div className="max-w-360 mx-auto px-6 sm:px-10 lg:px-16 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-6 space-y-6">
             <div className="flex items-center gap-2">

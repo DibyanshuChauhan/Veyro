@@ -128,7 +128,7 @@ const CreateProduct = () => {
   return (
     <div className="min-h-screen bg-[#08080a] text-[#e5e1e4] flex flex-col font-sans-luxury selection:bg-[#d4af37] selection:text-[#09090b]">
       {/* Header */}
-      <AuthHeader actionLabel="Dashboard" actionTo="/" />
+      <AuthHeader actionLabel="Dashboard" actionTo="/dashboard" />
 
       {/* Main Content */}
       <main className="grow flex justify-center px-4 sm:px-8 lg:px-16 py-12 lg:py-16">

@@ -1,4 +1,5 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../state/auth.slice";
 
@@ -6,13 +7,31 @@ export default function AuthHeader({ actionLabel, actionTo }) {
   const user = useSelector((state) => state.auth.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const isSeller = Boolean(user && (user.role === "seller" || user.isSeller === true));
 
   const handleSignOut = () => {
     dispatch(logout());
+    setMobileMenuOpen(false);
     navigate("/login");
   };
+
+  const handleSectionClick = (e, sectionId) => {
+    if (location.pathname === "/") {
+      e.preventDefault();
+      const el = document.getElementById(sectionId);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth" });
+        window.history.pushState(null, "", `/#${sectionId}`);
+      }
+    }
+    setMobileMenuOpen(false);
+  };
+
+  const isSellerDashboard = location.pathname === "/dashboard" || location.pathname === "/seller/dashboard";
+  const isCreateProduct = location.pathname === "/products/create";
 
   return (
     <header className="sticky top-0 z-50 w-full bg-[#08080a]/95 backdrop-blur-md border-b border-[#202026]">
@@ -30,44 +49,55 @@ export default function AuthHeader({ actionLabel, actionTo }) {
           </span>
         </div>
 
-        {/* Role-Specific Navigation Menu: Totally separate for Buyer vs Seller */}
+        {/* Desktop Navigation Menu: Only working and required links */}
         <nav className="hidden lg:flex items-center space-x-8 text-[11px] font-medium tracking-[0.2em] uppercase">
           {isSeller ? (
             /* Seller-only navigation options */
             <>
-              <Link to="/dashboard" className="text-[#d4af37] hover:text-[#f2ca50] transition-colors">
-                Seller Dashboard
+              <Link
+                to="/dashboard"
+                className={`transition-colors ${
+                  isSellerDashboard
+                    ? "text-[#d4af37]"
+                    : "text-[#a1a1aa] hover:text-[#f2ca50]"
+                }`}
+              >
+                Dashboard
               </Link>
-              <Link to="/products/create" className="text-[#f2ca50] hover:text-[#d4af37] transition-colors flex items-center gap-1">
+              <Link
+                to="/products/create"
+                className={`transition-colors flex items-center gap-1.5 ${
+                  isCreateProduct
+                    ? "text-[#d4af37]"
+                    : "text-[#a1a1aa] hover:text-[#d4af37]"
+                }`}
+              >
                 <span>+ New Creation</span>
               </Link>
-              <span className="text-[#71717a] cursor-default">Atelier Ledger</span>
             </>
           ) : (
-            /* Buyer / Client navigation options - ZERO seller links */
+            /* Buyer / Client navigation options */
             <>
-              <a href="/#collections" className="text-[#a1a1aa] hover:text-[#f4f4f5] transition-colors">
-                Collections
-              </a>
-              <a href="/#vault" className="text-[#a1a1aa] hover:text-[#f4f4f5] transition-colors">
+              <a
+                href="/#vault"
+                onClick={(e) => handleSectionClick(e, "vault")}
+                className="text-[#a1a1aa] hover:text-[#f4f4f5] transition-colors"
+              >
                 Archival Vault
               </a>
-              <a href="/#salon" className="text-[#a1a1aa] hover:text-[#f4f4f5] transition-colors">
+              <a
+                href="/#salon"
+                onClick={(e) => handleSectionClick(e, "salon")}
+                className="text-[#a1a1aa] hover:text-[#f4f4f5] transition-colors"
+              >
                 Private Salon
-              </a>
-              <a href="/#concierge" className="text-[#a1a1aa] hover:text-[#f4f4f5] transition-colors">
-                Concierge
               </a>
             </>
           )}
         </nav>
 
         {/* User controls / Auth actions */}
-        <div className="flex items-center space-x-5">
-          <span className="hidden sm:inline-block text-[11px] font-medium tracking-[0.2em] text-[#71717a] hover:text-[#d4af37] cursor-pointer transition-colors">
-            EN / USD
-          </span>
-
+        <div className="flex items-center space-x-4">
           {user ? (
             <div className="flex items-center gap-3">
               {/* Distinct Badge: Seller vs Buyer Client */}
@@ -116,8 +146,67 @@ export default function AuthHeader({ actionLabel, actionTo }) {
               </Link>
             </div>
           )}
+
+          {/* Mobile Menu Toggle Button */}
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen((prev) => !prev)}
+            aria-label="Toggle navigation menu"
+            className="lg:hidden p-2 text-[#a1a1aa] hover:text-[#f4f4f5] border border-[#27272a] hover:border-[#d4af37] transition-colors cursor-pointer"
+          >
+            {mobileMenuOpen ? (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            )}
+          </button>
         </div>
       </div>
+
+      {/* Mobile Dropdown Menu: Displays the same working links on smaller screens */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden bg-[#0c0c10] border-t border-[#202026] px-6 py-4 space-y-3">
+          {isSeller ? (
+            <div className="flex flex-col space-y-3 text-[11px] font-medium tracking-[0.2em] uppercase">
+              <Link
+                to="/dashboard"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`py-1 ${isSellerDashboard ? "text-[#d4af37]" : "text-[#a1a1aa] hover:text-[#f4f4f5]"}`}
+              >
+                Dashboard
+              </Link>
+              <Link
+                to="/products/create"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`py-1 flex items-center gap-1.5 ${isCreateProduct ? "text-[#d4af37]" : "text-[#a1a1aa] hover:text-[#d4af37]"}`}
+              >
+                <span>+ New Creation</span>
+              </Link>
+            </div>
+          ) : (
+            <div className="flex flex-col space-y-3 text-[11px] font-medium tracking-[0.2em] uppercase">
+              <a
+                href="/#vault"
+                onClick={(e) => handleSectionClick(e, "vault")}
+                className="py-1 text-[#a1a1aa] hover:text-[#f4f4f5]"
+              >
+                Archival Vault
+              </a>
+              <a
+                href="/#salon"
+                onClick={(e) => handleSectionClick(e, "salon")}
+                className="py-1 text-[#a1a1aa] hover:text-[#f4f4f5]"
+              >
+                Private Salon
+              </a>
+            </div>
+          )}
+        </div>
+      )}
     </header>
   );
 }
