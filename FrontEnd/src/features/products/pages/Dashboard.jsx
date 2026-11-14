@@ -14,7 +14,7 @@ const extractImageUrls = (product) => {
     .filter(Boolean);
 };
 
-/* ── Individual Product Lookbook Card with In-Place Carousel & Thumbnails ── */
+/* Product Card */
 function ProductCard({ product, onOpenGallery }) {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const images = useMemo(() => extractImageUrls(product), [product]);
@@ -135,7 +135,7 @@ function ProductCard({ product, onOpenGallery }) {
           )}
         </div>
 
-        {/* ── Mini Thumbnails Row: View and click any uploaded frame ── */}
+        {/* Mini Thumbnails Row */}
         {hasMultipleImages && (
           <div className="px-5 pt-3 pb-1 bg-[#0e0e12] border-b border-[#1e1e24] flex items-center gap-2 overflow-x-auto">
             {images.map((imgUrl, idx) => {
@@ -221,7 +221,7 @@ function ProductCard({ product, onOpenGallery }) {
   );
 }
 
-/* ── Fullscreen Atelier Archival Gallery Modal / Lightbox ── */
+/* Atelier Gallery Modal */
 function AtelierGalleryModal({ product, initialIndex = 0, onClose }) {
   const [modalIndex, setModalIndex] = useState(initialIndex);
   const images = useMemo(() => extractImageUrls(product), [product]);
@@ -260,7 +260,7 @@ function AtelierGalleryModal({ product, initialIndex = 0, onClose }) {
       aria-modal="true"
       className="fixed inset-0 z-50 bg-[#08080a]/95 backdrop-blur-xl flex flex-col justify-between overflow-y-auto"
     >
-      {/* ── Top Bar ── */}
+      {/* Top Bar */}
       <header className="w-full px-6 sm:px-10 py-5 border-b border-[#202026] flex items-center justify-between shrink-0 bg-[#08080a]/80 backdrop-blur-md">
         <div className="flex items-center gap-4">
           <span className="font-serif-luxury text-xl sm:text-2xl text-[#f4f4f5] tracking-wide">
@@ -291,7 +291,7 @@ function AtelierGalleryModal({ product, initialIndex = 0, onClose }) {
         </div>
       </header>
 
-      {/* ── Center Stage: High-Resolution Frame ── */}
+      {/* High-Resolution Frame */}
       <div className="grow relative flex items-center justify-center p-4 sm:p-8 my-auto">
         {/* Left Arrow */}
         {images.length > 1 && (
@@ -331,7 +331,7 @@ function AtelierGalleryModal({ product, initialIndex = 0, onClose }) {
         )}
       </div>
 
-      {/* ── Bottom Section: Thumbnails Strip & Metadata ── */}
+      {/* Thumbnails Strip & Metadata */}
       <footer className="w-full px-6 sm:px-10 py-5 border-t border-[#202026] bg-[#0c0c0f] shrink-0 space-y-4">
         {/* Thumbnails Row */}
         <div className="flex items-center justify-center gap-3 overflow-x-auto py-1">
@@ -375,7 +375,7 @@ function AtelierGalleryModal({ product, initialIndex = 0, onClose }) {
   );
 }
 
-/* ── Main Dashboard Component ── */
+/* Main Dashboard Component */
 export default function Dashboard() {
   const { user } = useAuth();
   const { handlegetSellerProducts, loading, error } = useProduct();
@@ -463,7 +463,7 @@ export default function Dashboard() {
       {/* Main Dashboard Workspace */}
       <main className="grow max-w-360 w-full mx-auto px-4 sm:px-8 lg:px-16 py-12 lg:py-16">
 
-        {/* ── Breadcrumb & Top Indicator ── */}
+        {/* Breadcrumb & Top Indicator */}
         <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
           <nav className="flex items-center gap-2 text-[10px] font-medium tracking-[0.2em] text-[#71717a] uppercase">
             <Link to="/" className="hover:text-[#d4af37] transition-colors">Atelier</Link>
@@ -477,7 +477,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* ── Editorial Headline Row ── */}
+        {/* Headline Row */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-[#202026] mb-10">
           <div>
             <div className="flex items-center gap-2 mb-2.5">
@@ -512,7 +512,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* ── Architectural Metrics Strip ── */}
+        {/* Metrics Strip */}
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
           {/* Card 1: Total Creations */}
           <div className="bg-[#121216] border border-[#232329] p-5 sm:p-6 champagne-glow relative">
@@ -570,7 +570,7 @@ export default function Dashboard() {
           </div>
         </section>
 
-        {/* ── Search, Filter & Sort Controls ── */}
+        {/* Search, Filter & Sort Controls */}
         <section className="bg-[#121216] border border-[#232329] p-4 sm:p-5 mb-8 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
           {/* Search Field */}
           <div className="relative grow max-w-md">
@@ -627,7 +627,7 @@ export default function Dashboard() {
           </div>
         </section>
 
-        {/* ── Error Banner if any ── */}
+        {/* Error Banner */}
         {error && (
           <div className="mb-8 p-4 bg-[#1c0f10] border border-[#ffb4ab]/40 text-[#ffb4ab] text-xs flex items-center justify-between gap-3">
             <span>{error}</span>
@@ -640,7 +640,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* ── Loading Skeleton State ── */}
+        {/* Loading State */}
         {loading && sellerProducts.length === 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
             {[1, 2, 3].map((n) => (
@@ -653,7 +653,7 @@ export default function Dashboard() {
             ))}
           </div>
         ) : filteredProducts.length === 0 ? (
-          /* ── Empty State ── */
+          /* Empty State */
           <div className="bg-[#121216] border border-[#232329] p-12 sm:p-16 text-center max-w-2xl mx-auto champagne-glow">
             <div className="w-14 h-14 mx-auto mb-6 border border-[#d4af37]/40 flex items-center justify-center text-[#d4af37]">
               <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -691,7 +691,7 @@ export default function Dashboard() {
             )}
           </div>
         ) : (
-          /* ── Products Lookbook Grid ── */
+          /* Products Grid */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {filteredProducts.map((product) => (
               <ProductCard
@@ -726,7 +726,7 @@ export default function Dashboard() {
         )}
       </main>
 
-      {/* ── Archival Fullscreen Gallery Modal / Lightbox ── */}
+      {/* Gallery Modal */}
       {galleryModalState.isOpen && galleryModalState.product && (
         <AtelierGalleryModal
           product={galleryModalState.product}

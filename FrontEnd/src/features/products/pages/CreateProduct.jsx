@@ -192,7 +192,7 @@ const CreateProduct = () => {
               {/* Form */}
               <form onSubmit={handleSubmit} className="space-y-7">
 
-                {/* ── Field 1: Title (Required) ── */}
+                {/* Field 1: Title */}
                 <div className="space-y-2">
                   <label
                     htmlFor="title"
@@ -219,7 +219,7 @@ const CreateProduct = () => {
                   </div>
                 </div>
 
-                {/* ── Field 2: Description (Required) ── */}
+                {/* Field 2: Description */}
                 <div className="space-y-2">
                   <label
                     htmlFor="description"
@@ -246,7 +246,7 @@ const CreateProduct = () => {
                   </div>
                 </div>
 
-                {/* ── Fields 3 & 4: Price Amount & Currency (Both Required) ── */}
+                {/* Fields 3 & 4: Price Amount & Currency */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   {/* Price Amount */}
                   <div className="space-y-2">
@@ -314,7 +314,7 @@ const CreateProduct = () => {
                   </div>
                 </div>
 
-                {/* ── Field 5: Product Images (Required, Up to 7) ── */}
+                {/* Field 5: Product Images */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <label className="block text-[10px] font-semibold tracking-[0.25em] text-[#a1a1aa] uppercase">
@@ -403,7 +403,7 @@ const CreateProduct = () => {
                   </div>
                 </div>
 
-                {/* ── Submission (Required Action Only) ── */}
+                {/* Submit button */}
                 <div className="pt-4 border-t border-[#1e1e24] space-y-4">
                   <button
                     type="submit"

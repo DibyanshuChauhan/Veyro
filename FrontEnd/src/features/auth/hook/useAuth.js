@@ -55,8 +55,8 @@ export const useAuth = () => {
     }
 
     /**
-     * Called once on app boot — validates the HTTP-only cookie against the server.
-     * If the cookie is missing or expired, the server returns 401 → we dispatch logout()
+     * Called once on app boot: validates the HTTP-only cookie against the server.
+     * If the cookie is missing or expired, the server returns 401 -> we dispatch logout()
      * which zeroes out user state. If valid, we hydrate the Redux store from the server.
      * Either way, sessionValidated is set to true so ProtectedRoute stops blocking.
      */
@@ -71,7 +71,7 @@ export const useAuth = () => {
             };
             dispatch(setUser(resolvedUser));
         } catch {
-            // Cookie absent, expired, or invalid — clear everything
+            // Cookie absent, expired, or invalid - clear everything
             dispatch(logout());
         } finally {
             dispatch(setLoading(false));
