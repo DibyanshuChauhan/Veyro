@@ -527,20 +527,30 @@ function BuyerProductCard({ product, onAcquire }) {
           </p>
         </div>
 
-        <div className="pt-2 border-t border-[#202026] flex gap-2">
+        <div className="pt-2 border-t border-[#202026] space-y-2">
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              className="py-2.5 px-3 bg-[#d4af37] hover:bg-[#f2ca50] text-[#09090b] text-[10px] font-bold tracking-[0.2em] uppercase transition-colors cursor-pointer text-center"
+            >
+              Buy Now
+            </button>
+            <button
+              type="button"
+              className="py-2.5 px-3 border border-[#d4af37]/60 hover:bg-[#d4af37]/10 text-[#f2ca50] text-[10px] font-semibold tracking-[0.16em] uppercase transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              </svg>
+              <span>Add to Cart</span>
+            </button>
+          </div>
           <Link
             to={`/products/${product._id}`}
-            className="grow py-2.5 px-3 border border-[#27272a] hover:border-[#d4af37]/60 text-[#a1a1aa] hover:text-[#f4f4f5] text-[10px] font-semibold tracking-[0.2em] uppercase transition-colors text-center"
+            className="block w-full py-2 px-3 border border-[#27272a] hover:border-[#d4af37]/60 text-[#a1a1aa] hover:text-[#f4f4f5] text-[10px] font-semibold tracking-[0.2em] uppercase transition-colors text-center"
           >
             View Details
           </Link>
-          <button
-            type="button"
-            onClick={onAcquire}
-            className="py-2.5 px-4 bg-[#d4af37] hover:bg-[#f2ca50] text-[#09090b] text-[10px] font-bold tracking-[0.22em] uppercase transition-colors cursor-pointer"
-          >
-            Acquire
-          </button>
         </div>
       </div>
     </div>

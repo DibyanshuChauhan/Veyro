@@ -343,10 +343,29 @@ export default function ProductDetail() {
 
               {/* Action Buttons */}
               <div className="space-y-3 pt-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    className="w-full py-4 bg-[#d4af37] text-[#09090b] text-[11px] font-bold tracking-[0.28em] uppercase hover:bg-[#f2ca50] hover:shadow-[0_0_30px_rgba(242,202,80,0.3)] transition-all cursor-pointer"
+                  >
+                    Buy Now
+                  </button>
+
+                  <button
+                    type="button"
+                    className="w-full py-4 border border-[#d4af37]/60 hover:bg-[#d4af37]/10 text-[#f2ca50] text-[11px] font-bold tracking-[0.28em] uppercase transition-all cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                    <span>Add to Cart</span>
+                  </button>
+                </div>
+
                 <button
                   type="button"
                   onClick={() => setInquiryModalOpen(true)}
-                  className="w-full py-4 bg-[#d4af37] text-[#09090b] text-[11px] font-bold tracking-[0.28em] uppercase hover:bg-[#f2ca50] hover:shadow-[0_0_30px_rgba(242,202,80,0.3)] transition-all cursor-pointer"
+                  className="w-full py-3.5 border border-[#27272a] hover:border-[#d4af37]/60 text-[#a1a1aa] hover:text-[#f4f4f5] text-[10px] font-semibold tracking-[0.2em] uppercase transition-colors cursor-pointer"
                 >
                   Request Confidential Allocation
                 </button>
