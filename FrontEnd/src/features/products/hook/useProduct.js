@@ -1,5 +1,5 @@
-import { setSellerProducts, setCatalogProducts } from "../state/product.slice";
-import { createProducts, getProductsBySeller, getAllProducts } from "../services/product.api";
+import { setSellerProducts, setCatalogProducts, setCurrentProduct } from "../state/product.slice";
+import { createProducts, getProductsBySeller, getAllProducts, getProductById } from "../services/product.api";
 import { useDispatch } from "react-redux";
 import { useState } from "react";
 
@@ -54,10 +54,27 @@ export const useProduct = () => {
         }
     };
 
+    const handleGetProductById = async (id) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const result = await getProductById(id);
+            const product = result?.product || result;
+            dispatch(setCurrentProduct(product));
+            return product;
+        } catch (err) {
+            setError(err?.response?.data?.message || err?.response?.data?.error || err.message || "Failed to fetch product details");
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return {
         handleAddProducts,
         handlegetSellerProducts,
         handleGetAllProducts,
+        handleGetProductById,
         loading,
         error
     };

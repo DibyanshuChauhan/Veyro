@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import productModel from "../models/product.model.js";
 import { uploadFile } from "../services/storage.service.js";
 
@@ -71,6 +72,39 @@ export const getAllProducts = async (req, res) => {
     } catch (error) {
         res.status(500).json({
             message: "Error fetching catalog products",
+            success: false,
+            error: error.message
+        });
+    }
+};
+
+export const getProductById = async (req, res) => {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(404).json({
+            message: "Archival product not found",
+            success: false
+        });
+    }
+
+    try {
+        const product = await productModel.findById(id).populate("seller", "fullname email contact");
+        if (!product) {
+            return res.status(404).json({
+                message: "Archival product not found",
+                success: false
+            });
+        }
+
+        res.status(200).json({
+            message: "Product fetched successfully",
+            success: true,
+            product
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: "Error fetching product details",
             success: false,
             error: error.message
         });

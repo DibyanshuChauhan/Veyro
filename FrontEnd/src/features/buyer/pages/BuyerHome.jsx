@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useAuth } from "../../auth/hook/useAuth";
 import { useProduct } from "../../products/hook/useProduct";
@@ -21,7 +21,6 @@ export default function BuyerHome() {
   const catalogProducts = useSelector((state) => state.product.catalogProducts);
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedProduct, setSelectedProduct] = useState(null);
   const [inquiryProduct, setInquiryProduct] = useState(null);
   const [inquirySuccess, setInquirySuccess] = useState(false);
   const [salonCity, setSalonCity] = useState("Paris, Place Vendôme");
@@ -221,7 +220,6 @@ export default function BuyerHome() {
               <BuyerProductCard
                 key={item._id}
                 product={item}
-                onViewDossier={() => setSelectedProduct(item)}
                 onAcquire={() => setInquiryProduct(item)}
               />
             ))}
@@ -352,17 +350,6 @@ export default function BuyerHome() {
         </div>
       </section>
 
-      {selectedProduct && (
-        <AtelierDossierModal
-          product={selectedProduct}
-          onClose={() => setSelectedProduct(null)}
-          onAcquire={() => {
-            setInquiryProduct(selectedProduct);
-            setSelectedProduct(null);
-          }}
-        />
-      )}
-
       {inquiryProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#08080a]/90 backdrop-blur-md">
           <div className="bg-[#121216] border border-[#d4af37]/40 w-full max-w-lg p-8 relative champagne-glow">
@@ -459,7 +446,7 @@ export default function BuyerHome() {
   );
 }
 
-function BuyerProductCard({ product, onViewDossier, onAcquire }) {
+function BuyerProductCard({ product, onAcquire }) {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const images = Array.isArray(product.images) && product.images.length > 0
     ? product.images
@@ -473,7 +460,7 @@ function BuyerProductCard({ product, onViewDossier, onAcquire }) {
 
   return (
     <div className="group bg-[#111115] border border-[#222228] hover:border-[#d4af37]/60 transition-all duration-300 flex flex-col justify-between overflow-hidden champagne-glow">
-      <div className="relative aspect-[3/4] bg-[#0c0c10] overflow-hidden">
+      <Link to={`/products/${product._id}`} className="relative aspect-[3/4] bg-[#0c0c10] overflow-hidden block">
         <img
           src={images[activeImageIndex]?.url}
           alt={product.title}
@@ -493,6 +480,7 @@ function BuyerProductCard({ product, onViewDossier, onAcquire }) {
                 key={idx}
                 type="button"
                 onClick={(e) => {
+                  e.preventDefault();
                   e.stopPropagation();
                   setActiveImageIndex(idx);
                 }}
@@ -509,29 +497,30 @@ function BuyerProductCard({ product, onViewDossier, onAcquire }) {
             {images.length} {images.length === 1 ? "Frame" : "Frames"}
           </span>
         </div>
-      </div>
+      </Link>
 
       <div className="p-5 flex flex-col grow justify-between space-y-4">
         <div>
           <span className="text-[9px] font-semibold tracking-[0.25em] text-[#d4af37] uppercase block mb-1">
             {product.seller?.fullname || "Partner Atelier"}
           </span>
-          <h3 className="font-serif-luxury text-lg text-[#f4f4f5] tracking-wide line-clamp-1 group-hover:text-[#f2ca50] transition-colors">
-            {product.title}
-          </h3>
+          <Link to={`/products/${product._id}`}>
+            <h3 className="font-serif-luxury text-lg text-[#f4f4f5] tracking-wide line-clamp-1 group-hover:text-[#f2ca50] transition-colors">
+              {product.title}
+            </h3>
+          </Link>
           <p className="text-xs text-[#a1a1aa] font-light mt-1.5 line-clamp-2 leading-relaxed">
             {product.description}
           </p>
         </div>
 
         <div className="pt-2 border-t border-[#202026] flex gap-2">
-          <button
-            type="button"
-            onClick={onViewDossier}
-            className="grow py-2.5 px-3 border border-[#27272a] hover:border-[#d4af37]/60 text-[#a1a1aa] hover:text-[#f4f4f5] text-[10px] font-semibold tracking-[0.2em] uppercase transition-colors cursor-pointer"
+          <Link
+            to={`/products/${product._id}`}
+            className="grow py-2.5 px-3 border border-[#27272a] hover:border-[#d4af37]/60 text-[#a1a1aa] hover:text-[#f4f4f5] text-[10px] font-semibold tracking-[0.2em] uppercase transition-colors text-center"
           >
-            View Dossier
-          </button>
+            View Details
+          </Link>
           <button
             type="button"
             onClick={onAcquire}
@@ -539,112 +528,6 @@ function BuyerProductCard({ product, onViewDossier, onAcquire }) {
           >
             Acquire
           </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function AtelierDossierModal({ product, onClose, onAcquire }) {
-  const [selectedImg, setSelectedImg] = useState(0);
-  const images = Array.isArray(product.images) && product.images.length > 0 ? product.images : [];
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8 bg-[#08080a]/95 backdrop-blur-lg">
-      <div className="bg-[#121216] border border-[#27272a] w-full max-w-5xl max-h-[90vh] overflow-y-auto p-6 sm:p-10 relative flex flex-col lg:flex-row gap-8 champagne-glow">
-        <button
-          type="button"
-          onClick={onClose}
-          className="absolute top-4 right-4 text-[#71717a] hover:text-[#f4f4f5] p-2 text-xl"
-        >
-          ✕
-        </button>
-
-        <div className="lg:w-1/2 flex flex-col gap-3">
-          <div className="aspect-[3/4] bg-[#0c0c0f] border border-[#222228] overflow-hidden">
-            <img
-              src={images[selectedImg]?.url}
-              alt={product.title}
-              className="w-full h-full object-cover object-top"
-            />
-          </div>
-
-          {images.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto pb-2">
-              {images.map((img, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  onClick={() => setSelectedImg(i)}
-                  className={`w-16 h-20 shrink-0 border overflow-hidden transition-all ${
-                    selectedImg === i ? "border-[#d4af37]" : "border-[#27272a] opacity-50"
-                  }`}
-                >
-                  <img src={img.url} alt="" className="w-full h-full object-cover" />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="lg:w-1/2 flex flex-col justify-between space-y-6">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-px bg-[#d4af37]" />
-              <span className="text-[10px] font-semibold tracking-[0.3em] text-[#d4af37] uppercase">
-                ARCHIVAL DOSSIER • {product.seller?.fullname || "Partner Atelier"}
-              </span>
-            </div>
-
-            <h2 className="font-serif-luxury text-3xl sm:text-4xl text-[#f4f4f5] leading-tight">
-              {product.title}
-            </h2>
-
-            <div className="text-xl font-bold tracking-wider text-[#f2ca50] py-2 border-y border-[#202026]">
-              {product.price?.currency || "INR"} {Number(product.price?.amount || 0).toLocaleString()}
-            </div>
-
-            <div>
-              <span className="text-[10px] font-semibold tracking-[0.2em] text-[#a1a1aa] uppercase block mb-1">
-                Atelier Narrative & Specifications
-              </span>
-              <p className="text-sm text-[#d4d4d8] font-light leading-relaxed whitespace-pre-line">
-                {product.description}
-              </p>
-            </div>
-
-            <div className="p-4 bg-[#0c0c10] border border-[#27272a] space-y-2">
-              <div className="flex justify-between text-xs">
-                <span className="text-[#71717a]">Archival Status:</span>
-                <span className="text-[#d4af37] font-semibold">Verified Original</span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-[#71717a]">Archival Frames:</span>
-                <span className="text-[#f4f4f5]">{images.length} High-Res Exposures</span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-[#71717a]">Acquisition Channel:</span>
-                <span className="text-[#f4f4f5]">Private Client Allocation</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex gap-4 pt-4 border-t border-[#202026]">
-            <button
-              type="button"
-              onClick={onClose}
-              className="py-3 px-6 border border-[#27272a] text-[#a1a1aa] hover:text-[#f4f4f5] text-[11px] font-semibold tracking-[0.2em] uppercase transition-colors cursor-pointer"
-            >
-              Close Dossier
-            </button>
-            <button
-              type="button"
-              onClick={onAcquire}
-              className="grow py-3 px-6 bg-[#d4af37] hover:bg-[#f2ca50] text-[#09090b] text-[11px] font-bold tracking-[0.25em] uppercase transition-colors cursor-pointer"
-            >
-              Request Allocation
-            </button>
-          </div>
         </div>
       </div>
     </div>

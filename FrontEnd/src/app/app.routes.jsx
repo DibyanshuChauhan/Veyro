@@ -4,6 +4,7 @@ import Login from "../features/auth/pages/Login";
 import CreateProduct from "../features/products/pages/CreateProduct";
 import Dashboard from "../features/products/pages/Dashboard";
 import BuyerHome from "../features/buyer/pages/BuyerHome";
+import ProductDetail from "../features/buyer/pages/ProductDetail";
 import { SellerRoute, GuestRoute } from "../features/auth/components/ProtectedRoute";
 import Unauthorized from "./Unauthorized";
 
@@ -11,6 +12,14 @@ export const routes = createBrowserRouter([
     {
         path: "/",
         element: <BuyerHome />
+    },
+    {
+        path: "/products/:id",
+        element: <ProductDetail />
+    },
+    {
+        path: "/product/:id",
+        element: <ProductDetail />
     },
     {
         element: <GuestRoute />,
