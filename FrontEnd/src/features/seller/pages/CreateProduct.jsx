@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useProduct } from "../hook/useProduct";
+import { useProduct } from "../../products/hook/useProduct";
 import { useAuth } from "../../auth/hook/useAuth";
 import AuthHeader from "../../auth/components/AuthHeader";
 import AuthFooter from "../../auth/components/AuthFooter";
@@ -20,39 +20,56 @@ const CreateProduct = () => {
     priceAmount: "",
     priceCurrency: "USD",
   });
-  const [images, setImages] = useState([]); // Array of { file, preview }
+  const [images, setImages] = useState([]);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    if (errorMessage) setErrorMessage("");
+    if (errorMsg) setErrorMsg("");
   };
 
-  const addFiles = (files) => {
-    const remaining = MAX_IMAGES - images.length;
-    if (remaining <= 0) return;
-    const accepted = Array.from(files)
-      .filter((f) => f.type.startsWith("image/"))
-      .slice(0, remaining);
+  const addFiles = (fileList) => {
+    if (!fileList || fileList.length === 0) return;
+    const incoming = Array.from(fileList);
+    const availableSlots = MAX_IMAGES - images.length;
 
-    if (accepted.length === 0) return;
+    if (availableSlots <= 0) {
+      setErrorMsg(`Maximum of ${MAX_IMAGES} frames reached.`);
+      return;
+    }
 
-    const newImages = accepted.map((file) => ({
-      file,
-      preview: URL.createObjectURL(file),
-    }));
-    setImages((prev) => [...prev, ...newImages]);
-    if (errorMessage) setErrorMessage("");
+    const toProcess = incoming.slice(0, availableSlots);
+    const valid = [];
+
+    for (const file of toProcess) {
+      if (!file.type.startsWith("image/")) {
+        setErrorMsg(`"${file.name}" is not an image file.`);
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        setErrorMsg(`"${file.name}" exceeds the 5MB archival limit.`);
+        return;
+      }
+      valid.push({
+        file,
+        preview: URL.createObjectURL(file),
+      });
+    }
+
+    setErrorMsg("");
+    setImages((prev) => [...prev, ...valid]);
   };
 
-  const removeImage = (index) => {
+  const removeImage = (indexToRemove) => {
     setImages((prev) => {
-      URL.revokeObjectURL(prev[index].preview);
-      return prev.filter((_, i) => i !== index);
+      const target = prev[indexToRemove];
+      if (target?.preview) {
+        URL.revokeObjectURL(target.preview);
+      }
+      return prev.filter((_, idx) => idx !== indexToRemove);
     });
   };
 
@@ -64,62 +81,59 @@ const CreateProduct = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorMessage("");
-    setSuccessMessage("");
+    setErrorMsg("");
 
-    // Enforce that user is a seller
     if (!isSeller) {
-      setErrorMessage("Only authenticated Atelier Sellers have the right to create and list products.");
+      setErrorMsg("Unauthorized: Only verified sellers can publish creations.");
       return;
     }
 
-    // Validate required fields
     if (!formData.title.trim()) {
-      setErrorMessage("Creation Title is required.");
+      setErrorMsg("Creation title is required.");
       return;
     }
-
     if (!formData.description.trim()) {
-      setErrorMessage("Archival Description is required.");
+      setErrorMsg("Archival description is required.");
       return;
     }
-
-    const numericPrice = parseFloat(formData.priceAmount);
-    if (isNaN(numericPrice) || numericPrice <= 0) {
-      setErrorMessage("Acquisition Value must be a positive number.");
+    const parsedAmount = parseFloat(formData.priceAmount);
+    if (!formData.priceAmount || isNaN(parsedAmount) || parsedAmount <= 0) {
+      setErrorMsg("Please specify a valid acquisition value greater than zero.");
       return;
     }
-
     if (images.length === 0) {
-      setErrorMessage("Please upload at least 1 product image (up to 7 frames).");
+      setErrorMsg("At least one high-resolution frame is required.");
+      return;
+    }
+    if (images.length > MAX_IMAGES) {
+      setErrorMsg(`A maximum of ${MAX_IMAGES} frames may be registered.`);
       return;
     }
 
     setIsSubmitting(true);
-    try {
-      const payload = new FormData();
-      payload.append("title", formData.title.trim());
-      payload.append("description", formData.description.trim());
-      payload.append("priceAmount", formData.priceAmount);
-      payload.append("priceCurrency", formData.priceCurrency);
-      images.forEach((img) => payload.append("images", img.file));
 
-      await handleAddProducts(payload);
-      setSuccessMessage("Product listed successfully in the Atelier!");
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 1200);
+    try {
+      const data = new FormData();
+      data.append("title", formData.title.trim());
+      data.append("description", formData.description.trim());
+      data.append("priceAmount", parsedAmount.toString());
+      data.append("priceCurrency", formData.priceCurrency);
+
+      images.forEach((item) => {
+        data.append("images", item.file);
+      });
+
+      await handleAddProducts(data);
+
+      images.forEach((img) => URL.revokeObjectURL(img.preview));
+      navigate("/dashboard");
     } catch (err) {
-      const validationErrors = err?.response?.data?.errors;
-      const errorText =
-        (Array.isArray(validationErrors) && validationErrors.length > 0
-          ? validationErrors.map(({ msg }) => msg).join(" ")
-          : null) ||
+      const serverMsg =
         err?.response?.data?.error ||
         err?.response?.data?.message ||
         err?.message ||
-        "Failed to list product. Please verify your connection.";
-      setErrorMessage(errorText);
+        "An unexpected error occurred while publishing the creation.";
+      setErrorMsg(serverMsg);
     } finally {
       setIsSubmitting(false);
     }
@@ -127,13 +141,10 @@ const CreateProduct = () => {
 
   return (
     <div className="min-h-screen bg-[#08080a] text-[#e5e1e4] flex flex-col font-sans-luxury selection:bg-[#d4af37] selection:text-[#09090b]">
-      {/* Header */}
       <AuthHeader actionLabel="Dashboard" actionTo="/dashboard" />
 
-      {/* Main Content */}
       <main className="grow flex justify-center px-4 sm:px-8 lg:px-16 py-12 lg:py-16">
         <div className="w-full max-w-3xl">
-
           {/* Breadcrumb & Seller Badge */}
           <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
             <nav className="flex items-center gap-2 text-[10px] font-medium tracking-[0.2em] text-[#71717a] uppercase">
@@ -150,48 +161,37 @@ const CreateProduct = () => {
 
           {/* Form Card */}
           <div className="bg-[#121216] border border-[#232329] champagne-glow relative">
-            {/* Gold Hairline Top Accent */}
             <div className="absolute top-0 left-0 right-0 h-0.5 bg-linear-to-r from-transparent via-[#d4af37] to-transparent opacity-90" />
 
-            <div className="p-8 sm:p-12 lg:p-14">
-              {/* Form Header */}
+            <div className="p-7 sm:p-11">
               <header className="mb-9 pb-7 border-b border-[#1e1e24]">
-                <div className="flex items-center gap-2 mb-2.5">
+                <div className="flex items-center gap-2 mb-2">
                   <span className="w-2.5 h-px bg-[#d4af37]" />
                   <span className="text-[10px] font-semibold tracking-[0.3em] text-[#d4af37] uppercase">
-                    Seller Atelier Registry
+                    New Atelier Silhouette
                   </span>
                 </div>
-                <h1 className="font-serif-luxury text-3xl sm:text-4xl text-[#f4f4f5] tracking-wide mb-2.5">
-                  List a New Creation
+                <h1 className="font-serif-luxury text-3xl sm:text-4xl text-[#f4f4f5] tracking-wide mb-2">
+                  Register a Creation
                 </h1>
-                <p className="text-xs sm:text-sm text-[#a1a1aa] font-light leading-relaxed max-w-xl">
-                  Required fields for certified archival registration: title, description, acquisition price, currency, and imagery (up to 7 frames).
+                <p className="text-xs sm:text-sm text-[#a1a1aa] font-light leading-relaxed">
+                  Document and certify your piece for the confidential catalog. Ensure all archival imagery and descriptions match haute couture provenance standards.
                 </p>
               </header>
 
-              {/* Status Notifications */}
-              {errorMessage && (
-                <div className="mb-6 p-4 bg-[#1c0f10] border border-[#ffb4ab]/40 text-[#ffb4ab] text-xs flex items-start gap-3">
+              {errorMsg && (
+                <div
+                  role="alert"
+                  className="mb-8 p-4 bg-[#1c0f10] border border-[#ffb4ab]/40 flex items-start gap-3 text-xs text-[#ffb4ab]"
+                >
                   <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span>{errorMessage}</span>
+                  <span className="font-light">{errorMsg}</span>
                 </div>
               )}
 
-              {successMessage && (
-                <div className="mb-6 p-4 bg-[#101b12] border border-[#4ade80]/40 text-[#4ade80] text-xs flex items-start gap-3">
-                  <svg className="w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span>{successMessage}</span>
-                </div>
-              )}
-
-              {/* Form */}
               <form onSubmit={handleSubmit} className="space-y-7">
-
                 {/* Field 1: Title */}
                 <div className="space-y-2">
                   <label
@@ -248,7 +248,6 @@ const CreateProduct = () => {
 
                 {/* Fields 3 & 4: Price Amount & Currency */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  {/* Price Amount */}
                   <div className="space-y-2">
                     <label
                       htmlFor="priceAmount"
@@ -266,49 +265,40 @@ const CreateProduct = () => {
                         id="priceAmount"
                         name="priceAmount"
                         type="number"
-                        min="0.01"
-                        step="0.01"
+                        min="1"
+                        step="any"
                         required
                         value={formData.priceAmount}
                         onChange={handleChange}
-                        placeholder="1850.00"
-                        className="w-full bg-transparent py-3.5 pr-4 text-sm text-[#f4f4f5] placeholder:text-[#52525b] border-0 focus:outline-none focus:ring-0 tracking-wider font-light"
+                        placeholder="e.g. 12500"
+                        className="w-full bg-transparent py-3.5 pr-4 text-sm text-[#f4f4f5] placeholder:text-[#52525b] border-0 focus:outline-none focus:ring-0 tracking-wide font-light"
                       />
                     </div>
                   </div>
 
-                  {/* Price Currency */}
                   <div className="space-y-2">
                     <label
                       htmlFor="priceCurrency"
                       className="block text-[10px] font-semibold tracking-[0.25em] text-[#a1a1aa] uppercase"
                     >
-                      Currency <span className="text-[#d4af37]">*</span>
+                      Valuation Currency <span className="text-[#d4af37]">*</span>
                     </label>
-                    <div className="relative border border-[#27272a] bg-[#0c0c0f] focus-within:border-[#d4af37] focus-within:ring-1 focus-within:ring-[#d4af37]/30 transition-all duration-200">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#71717a] pointer-events-none">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 004 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064" />
-                        </svg>
-                      </span>
+                    <div className="relative border border-[#27272a] bg-[#0c0c0f] focus-within:border-[#d4af37] transition-all duration-200">
                       <select
                         id="priceCurrency"
                         name="priceCurrency"
-                        required
                         value={formData.priceCurrency}
                         onChange={handleChange}
-                        className="w-full bg-transparent py-3.5 pl-11 pr-10 text-sm text-[#f4f4f5] border-0 focus:outline-none focus:ring-0 tracking-wider font-light appearance-none cursor-pointer"
+                        className="w-full bg-transparent py-3.5 pl-4 pr-10 text-sm text-[#f4f4f5] border-0 focus:outline-none focus:ring-0 tracking-wider appearance-none cursor-pointer uppercase font-medium"
                       >
-                        {CURRENCIES.map((c) => (
-                          <option key={c} value={c} className="bg-[#121216] text-[#f4f4f5]">
-                            {c}
+                        {CURRENCIES.map((curr) => (
+                          <option key={curr} value={curr} className="bg-[#121216] text-[#f4f4f5]">
+                            {curr} — Standard
                           </option>
                         ))}
                       </select>
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[#d4af37] pointer-events-none">
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                        </svg>
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[#71717a] pointer-events-none text-xs">
+                        ▼
                       </span>
                     </div>
                   </div>
@@ -360,7 +350,7 @@ const CreateProduct = () => {
                     />
                   </div>
 
-                  {/* 7 Horizontal Frame Preview Slots */}
+                  {/* Frame Preview Slots */}
                   <div className="grid grid-cols-7 gap-2">
                     {Array.from({ length: MAX_IMAGES }).map((_, idx) => {
                       const img = images[idx];
@@ -422,22 +412,17 @@ const CreateProduct = () => {
                       </svg>
                     )}
                   </button>
-
-                  <p className="text-[10px] text-[#52525b] leading-relaxed tracking-wide text-center">
-                    Protected under VEYRO Archival Protocol & Digital Authenticity Ledger.
-                  </p>
                 </div>
-
               </form>
             </div>
           </div>
         </div>
       </main>
 
-      {/* Footer */}
       <AuthFooter />
     </div>
   );
 };
 
 export default CreateProduct;
+
