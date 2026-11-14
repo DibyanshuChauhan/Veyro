@@ -1,5 +1,5 @@
-import { setSellerProducts } from "../state/product.slice";
-import { createProducts, getProductsBySeller } from "../services/product.api";
+import { setSellerProducts, setCatalogProducts } from "../state/product.slice";
+import { createProducts, getProductsBySeller, getAllProducts } from "../services/product.api";
 import { useDispatch } from "react-redux";
 import { useState } from "react";
 
@@ -38,9 +38,26 @@ export const useProduct = () => {
         }
     };
 
+    const handleGetAllProducts = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const result = await getAllProducts();
+            const products = result?.products || result || [];
+            dispatch(setCatalogProducts(products));
+            return products;
+        } catch (err) {
+            setError(err?.response?.data?.error || err.message || "Failed to fetch archival catalog");
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return {
         handleAddProducts,
         handlegetSellerProducts,
+        handleGetAllProducts,
         loading,
         error
     };

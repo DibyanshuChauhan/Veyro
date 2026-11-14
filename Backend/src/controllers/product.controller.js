@@ -59,3 +59,20 @@ const seller = req.user;
         }) 
     }
 }
+
+export const getAllProducts = async (req, res) => {
+    try {
+        const products = await productModel.find({}).populate("seller", "fullname email contact").sort({ createdAt: -1 });
+        res.status(200).json({
+            message: "All archival products fetched successfully",
+            success: true,
+            products
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: "Error fetching catalog products",
+            success: false,
+            error: error.message
+        });
+    }
+};

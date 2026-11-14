@@ -1,0 +1,744 @@
+import { useState, useEffect, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { useAuth } from "../../auth/hook/useAuth";
+import { useProduct } from "../../products/hook/useProduct";
+import AuthHeader from "../../auth/components/AuthHeader";
+import AuthFooter from "../../auth/components/AuthFooter";
+
+// Curated Editorial Showpieces for initial/fallback display
+const CURATED_ARCHIVES = [
+  {
+    _id: "editorial-01",
+    title: "Nocturne Archival Velvet Cloak",
+    description: "Hand-loomed Italian silk velvet tailored with 24k gold bullion filigree embroidery and lined in pure mulberry habotai silk. Commissioned for private salon presentations.",
+    price: { amount: "12800", currency: "USD" },
+    images: [
+      { url: "https://images.unsplash.com/photo-1539109136881-3be0616acf4b?q=80&w=1200&auto=format&fit=crop" },
+      { url: "https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=1200&auto=format&fit=crop" },
+      { url: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=1200&auto=format&fit=crop" },
+    ],
+    seller: { fullname: "Maison Veyro Paris" },
+    category: "HAUTE COUTURE"
+  },
+  {
+    _id: "editorial-02",
+    title: "Sculptural Obsidian Silk Bustier",
+    description: "Architectural boned corset crafted from weighted duchess satin with hand-formed sculptural peplum and artisanal champagne thread finishing.",
+    price: { amount: "6400", currency: "USD" },
+    images: [
+      { url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=1200&auto=format&fit=crop" },
+      { url: "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?q=80&w=1200&auto=format&fit=crop" },
+    ],
+    seller: { fullname: "Atelier Milanese" },
+    category: "EVENING SILHOUETTES"
+  },
+  {
+    _id: "editorial-03",
+    title: "Archival Asymmetric Trench in Buff Leather",
+    description: "Full-grain glove calfskin leather coat cut in an exaggerated dropped-shoulder silhouette with bespoke horn toggles and vintage bronze grommets.",
+    price: { amount: "9200", currency: "USD" },
+    images: [
+      { url: "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=1200&auto=format&fit=crop" },
+      { url: "https://images.unsplash.com/photo-1492707892479-7bc8d5a4ee93?q=80&w=1200&auto=format&fit=crop" },
+    ],
+    seller: { fullname: "Guild of Antwerp" },
+    category: "ARCHIVAL LEATHER"
+  },
+  {
+    _id: "editorial-04",
+    title: "Soleil Gilded Evening Gown",
+    description: "Floor-length column silhouette woven with reflective gold metallic yarns, featuring an open cowl back and sweeping floor train. One-of-one archival creation.",
+    price: { amount: "15500", currency: "USD" },
+    images: [
+      { url: "https://images.unsplash.com/photo-1566174053879-31528523f8ae?q=80&w=1200&auto=format&fit=crop" },
+      { url: "https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=1200&auto=format&fit=crop" },
+    ],
+    seller: { fullname: "Maison Veyro Paris" },
+    category: "HAUTE COUTURE"
+  }
+];
+
+export default function BuyerHome() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const isSeller = Boolean(user && (user.role === "seller" || user.isSeller === true));
+
+  // If user is registered as a seller, redirect them directly to the Seller Dashboard
+  useEffect(() => {
+    if (isSeller) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [isSeller, navigate]);
+
+  const { handleGetAllProducts, loading } = useProduct();
+  const catalogProducts = useSelector((state) => state.product.catalogProducts);
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("ALL");
+  const [selectedProduct, setSelectedProduct] = useState(null); // for Dossier Modal
+  const [inquiryProduct, setInquiryProduct] = useState(null); // for Acquisition Modal
+  const [inquirySuccess, setInquirySuccess] = useState(false);
+  const [salonCity, setSalonCity] = useState("Paris, Place Vendôme");
+  const [salonBooked, setSalonBooked] = useState(false);
+
+  // Fetch live products on mount
+  useEffect(() => {
+    handleGetAllProducts().catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Merge live products with curated editorial showpieces
+  const allCreations = useMemo(() => {
+    const live = Array.isArray(catalogProducts) ? catalogProducts : [];
+    if (live.length > 0) {
+      // Prioritize live products, append curated showpieces if catalog is small
+      return [...live, ...CURATED_ARCHIVES.filter(c => !live.some(l => l.title === c.title))];
+    }
+    return CURATED_ARCHIVES;
+  }, [catalogProducts]);
+
+  // Filtering
+  const filteredCreations = useMemo(() => {
+    return allCreations.filter((item) => {
+      const matchSearch =
+        item.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.description?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchCategory =
+        selectedCategory === "ALL" ||
+        item.category === selectedCategory ||
+        (selectedCategory === "HAUTE COUTURE" && !item.category);
+      return matchSearch && matchCategory;
+    });
+  }, [allCreations, searchQuery, selectedCategory]);
+
+  const handleAcquisitionSubmit = (e) => {
+    e.preventDefault();
+    setInquirySuccess(true);
+    setTimeout(() => {
+      setInquirySuccess(false);
+      setInquiryProduct(null);
+    }, 2800);
+  };
+
+  const handleSalonBooking = (e) => {
+    e.preventDefault();
+    setSalonBooked(true);
+    setTimeout(() => setSalonBooked(false), 3500);
+  };
+
+  return (
+    <div className="min-h-screen bg-[#08080a] text-[#e5e1e4] flex flex-col font-sans-luxury selection:bg-[#d4af37] selection:text-[#09090b]">
+      {/* Luxury Client Navigation */}
+      <AuthHeader />
+
+      {/* Hero: Private Client Archival Exhibition */}
+      <section className="relative overflow-hidden border-b border-[#202026] min-h-[82vh] flex items-center justify-center">
+        {/* Ambient atmospheric backdrop */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2000&auto=format&fit=crop"
+            alt="Veyro Haute Couture Private Salon"
+            className="w-full h-full object-cover object-center opacity-30 filter brightness-[0.7] contrast-[1.15] transition-transform duration-1000 ease-out hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#08080a] via-[#08080a]/80 to-[#08080a]/50" />
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-140 h-140 rounded-full bg-[#d4af37]/8 blur-[160px] pointer-events-none" />
+        </div>
+
+        <div className="relative z-10 max-w-4xl mx-auto px-6 py-24 text-center space-y-7">
+          {/* Top Archival Tag */}
+          <div className="inline-flex items-center gap-2.5 px-4 py-1.5 bg-[#121216]/90 border border-[#d4af37]/30 backdrop-blur-md">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37] animate-pulse" />
+            <span className="text-[10px] font-semibold tracking-[0.3em] text-[#d4af37] uppercase">
+              {user ? `PRIVATE CLIENT PORTAL • WELCOME ${user.fullname?.split(" ")[0]?.toUpperCase() || "PATRON"}` : "PRIVATE CLIENT SALON • FALL / WINTER COLLECTIVE"}
+            </span>
+          </div>
+
+          {/* Headline */}
+          <h1 className="font-serif-luxury text-4xl sm:text-6xl lg:text-7xl text-[#f4f4f5] tracking-tight leading-[1.08]">
+            Curated Archival <br />
+            <span className="italic font-light text-[#f2ca50]">Haute Couture.</span>
+          </h1>
+
+          {/* Subtitle */}
+          <p className="text-sm sm:text-base text-[#a1a1aa] font-light max-w-2xl mx-auto leading-relaxed">
+            Welcome to VEYRO’s confidential salon. Explore one-of-a-kind allocations, private runway drops, and bespoke hand-tailored masterpieces directly from verified European ateliers.
+          </p>
+
+          {/* Buyer Action CTAs */}
+          <div className="flex flex-wrap gap-4 justify-center pt-4">
+            <a
+              href="#vault"
+              className="py-4 px-8 bg-[#d4af37] text-[#09090b] text-[11px] font-bold tracking-[0.28em] uppercase transition-all duration-300 hover:bg-[#f2ca50] hover:shadow-[0_0_30px_rgba(242,202,80,0.3)] cursor-pointer"
+            >
+              Explore Archival Vault
+            </a>
+            <a
+              href="#salon"
+              className="py-4 px-8 border border-[#d4af37]/60 text-[#f2ca50] text-[11px] font-bold tracking-[0.28em] uppercase hover:bg-[#d4af37] hover:text-[#09090b] transition-all duration-300 cursor-pointer"
+            >
+              Reserve Private Salon
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* VIP Client Privileges Ribbon */}
+      <section className="border-b border-[#202026] bg-[#0c0c10]">
+        <div className="max-w-360 mx-auto px-6 sm:px-10 lg:px-16 py-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="p-4 border border-[#202026] bg-[#121216]/60 flex items-start gap-3.5">
+              <span className="text-[#d4af37] font-serif-luxury text-lg">01</span>
+              <div>
+                <span className="text-[10px] font-bold tracking-[0.25em] text-[#f4f4f5] uppercase block mb-1">
+                  Guaranteed Allocation
+                </span>
+                <p className="text-[11px] text-[#71717a] font-light leading-snug">
+                  Priority reservation privileges for seasonal runway caps and private atelier releases.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 border border-[#202026] bg-[#121216]/60 flex items-start gap-3.5">
+              <span className="text-[#d4af37] font-serif-luxury text-lg">02</span>
+              <div>
+                <span className="text-[10px] font-bold tracking-[0.25em] text-[#f4f4f5] uppercase block mb-1">
+                  Private Salon Fittings
+                </span>
+                <p className="text-[11px] text-[#71717a] font-light leading-snug">
+                  Personal bespoke appointments in Paris, Milan, London, Tokyo, and New York salons.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 border border-[#202026] bg-[#121216]/60 flex items-start gap-3.5">
+              <span className="text-[#d4af37] font-serif-luxury text-lg">03</span>
+              <div>
+                <span className="text-[10px] font-bold tracking-[0.25em] text-[#f4f4f5] uppercase block mb-1">
+                  Archival Provenance
+                </span>
+                <p className="text-[11px] text-[#71717a] font-light leading-snug">
+                  Cryptographically verified certificate of authenticity and provenance record for every acquisition.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 border border-[#202026] bg-[#121216]/60 flex items-start gap-3.5">
+              <span className="text-[#d4af37] font-serif-luxury text-lg">04</span>
+              <div>
+                <span className="text-[10px] font-bold tracking-[0.25em] text-[#f4f4f5] uppercase block mb-1">
+                  Concierge Liaison
+                </span>
+                <p className="text-[11px] text-[#71717a] font-light leading-snug">
+                  Dedicated personal style director available 24/7 for custom commissions and discreet requests.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Main Archival Vault: Curated Collections Showcase */}
+      <section id="vault" className="py-20 lg:py-28 max-w-360 mx-auto px-6 sm:px-10 lg:px-16 w-full">
+        {/* Section Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12 border-b border-[#202026] pb-8">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="w-2.5 h-px bg-[#d4af37]" />
+              <span className="text-[10px] font-semibold tracking-[0.3em] text-[#d4af37] uppercase">
+                THE CONFIDENTIAL COLLECTION
+              </span>
+            </div>
+            <h2 className="font-serif-luxury text-3xl sm:text-4xl text-[#f4f4f5] tracking-wide">
+              Archival Catalog
+            </h2>
+            <p className="text-xs sm:text-sm text-[#a1a1aa] font-light mt-1 max-w-md">
+              Each piece represents singular artisanal craftsmanship, made with European heritage textiles and museum-grade finishes.
+            </p>
+          </div>
+
+          {/* Search Bar for Buyers */}
+          <div className="w-full md:w-80 relative">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#71717a]">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </span>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search archival pieces..."
+              className="w-full bg-[#121216] border border-[#27272a] text-xs text-[#f4f4f5] placeholder:text-[#52525b] pl-10 pr-4 py-3 focus:outline-none focus:border-[#d4af37] font-light"
+            />
+          </div>
+        </div>
+
+        {/* Category Pills */}
+        <div className="flex flex-wrap gap-2.5 mb-10">
+          {["ALL", "HAUTE COUTURE", "EVENING SILHOUETTES", "ARCHIVAL LEATHER"].map((cat) => (
+            <button
+              key={cat}
+              type="button"
+              onClick={() => setSelectedCategory(cat)}
+              className={`py-2 px-4 text-[10px] font-semibold tracking-[0.2em] uppercase transition-all duration-200 cursor-pointer ${
+                selectedCategory === cat
+                  ? "bg-[#d4af37] text-[#09090b]"
+                  : "bg-[#121216] text-[#a1a1aa] border border-[#27272a] hover:border-[#d4af37]/50 hover:text-[#f4f4f5]"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        {/* Loading State */}
+        {loading && (
+          <div className="py-20 text-center">
+            <div className="w-10 h-10 border-2 border-[#d4af37] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-xs text-[#d4af37] tracking-[0.25em] uppercase font-light">
+              Accessing Archival Ledger...
+            </p>
+          </div>
+        )}
+
+        {/* Product Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+          {filteredCreations.map((item) => (
+            <BuyerProductCard
+              key={item._id}
+              product={item}
+              onViewDossier={() => setSelectedProduct(item)}
+              onAcquire={() => setInquiryProduct(item)}
+            />
+          ))}
+        </div>
+
+        {filteredCreations.length === 0 && !loading && (
+          <div className="py-24 text-center border border-[#202026] bg-[#101014] p-12">
+            <span className="font-serif-luxury text-2xl text-[#f4f4f5] block mb-2">No Archival Pieces Found</span>
+            <p className="text-xs text-[#71717a] font-light max-w-sm mx-auto mb-6">
+              There are currently no pieces matching your search criteria. Please adjust your query or contact the concierge for bespoke requests.
+            </p>
+            <button
+              onClick={() => {
+                setSearchQuery("");
+                setSelectedCategory("ALL");
+              }}
+              className="py-2.5 px-6 border border-[#d4af37] text-[#d4af37] text-[10px] font-bold tracking-[0.25em] uppercase hover:bg-[#d4af37] hover:text-[#09090b] transition-colors cursor-pointer"
+            >
+              Clear Search Filters
+            </button>
+          </div>
+        )}
+      </section>
+
+      {/* Private Salon Booking Section */}
+      <section id="salon" className="border-t border-[#202026] bg-[#0c0c10] py-20 lg:py-28">
+        <div className="max-w-360 mx-auto px-6 sm:px-10 lg:px-16 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          <div className="lg:col-span-6 space-y-6">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-px bg-[#d4af37]" />
+              <span className="text-[10px] font-semibold tracking-[0.3em] text-[#d4af37] uppercase">
+                BESPOKE FITTINGS & PRIVATE VIEWINGS
+              </span>
+            </div>
+            <h2 className="font-serif-luxury text-3xl sm:text-5xl text-[#f4f4f5] leading-tight">
+              Reserve Your Private Salon Appointment
+            </h2>
+            <p className="text-sm text-[#a1a1aa] font-light leading-relaxed">
+              Experience private salon consultations reserved exclusively for verified clientele. Meet directly with atelier master tailors and personal stylists in our flagship heritage salons.
+            </p>
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center gap-3 text-xs text-[#e5e1e4] font-light">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37]" />
+                <span>Confidential champagne tasting & private viewing suites</span>
+              </div>
+              <div className="flex items-center gap-3 text-xs text-[#e5e1e4] font-light">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37]" />
+                <span>Made-to-measure bespoke millimeter precision tailoring</span>
+              </div>
+              <div className="flex items-center gap-3 text-xs text-[#e5e1e4] font-light">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37]" />
+                <span>Discreet white-glove courier to your residence or hotel</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="lg:col-span-6">
+            <div className="bg-[#121216] border border-[#27272a] p-8 sm:p-10 champagne-glow relative">
+              <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[#d4af37] to-transparent" />
+              <h3 className="font-serif-luxury text-xl text-[#f4f4f5] mb-2">Request Salon Reservation</h3>
+              <p className="text-xs text-[#a1a1aa] font-light mb-6">
+                Our concierge director will confirm your confidential allocation within 4 hours.
+              </p>
+
+              {salonBooked ? (
+                <div className="p-6 bg-[#09090b] border border-[#d4af37] text-center space-y-2">
+                  <span className="text-[#d4af37] font-serif-luxury text-lg block">Reservation Received</span>
+                  <p className="text-xs text-[#a1a1aa] font-light">
+                    Your salon reservation for <strong>{salonCity}</strong> has been logged. Our Senior Concierge will contact you privately.
+                  </p>
+                </div>
+              ) : (
+                <form onSubmit={handleSalonBooking} className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-semibold tracking-[0.2em] text-[#a1a1aa] uppercase">
+                      Select Atelier Salon Location
+                    </label>
+                    <select
+                      value={salonCity}
+                      onChange={(e) => setSalonCity(e.target.value)}
+                      className="w-full bg-[#0c0c0f] border border-[#27272a] text-xs text-[#f4f4f5] p-3 focus:outline-none focus:border-[#d4af37]"
+                    >
+                      <option value="Paris, Place Vendôme">Paris • Place Vendôme Private Salon</option>
+                      <option value="Milan, Via Montenapoleone">Milan • Via Montenapoleone Atelier</option>
+                      <option value="London, Mayfair">London • Mayfair Heritage Suite</option>
+                      <option value="Tokyo, Ginza">Tokyo • Ginza Private Residence</option>
+                      <option value="New York, Madison Avenue">New York • Madison Avenue Salon</option>
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-semibold tracking-[0.2em] text-[#a1a1aa] uppercase">
+                        Preferred Date
+                      </label>
+                      <input
+                        type="date"
+                        required
+                        className="w-full bg-[#0c0c0f] border border-[#27272a] text-xs text-[#f4f4f5] p-3 focus:outline-none focus:border-[#d4af37]"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-semibold tracking-[0.2em] text-[#a1a1aa] uppercase">
+                        Client Contact
+                      </label>
+                      <input
+                        type="text"
+                        defaultValue={user?.contact || user?.email || ""}
+                        placeholder="Direct contact or phone"
+                        required
+                        className="w-full bg-[#0c0c0f] border border-[#27272a] text-xs text-[#f4f4f5] p-3 focus:outline-none focus:border-[#d4af37]"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-4 bg-[#d4af37] text-[#09090b] text-[11px] font-bold tracking-[0.25em] uppercase hover:bg-[#f2ca50] transition-colors cursor-pointer mt-2"
+                  >
+                    Confirm Private Reservation
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Fullscreen Archival Dossier Modal (View All Images & Story) */}
+      {selectedProduct && (
+        <AtelierDossierModal
+          product={selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+          onAcquire={() => {
+            setInquiryProduct(selectedProduct);
+            setSelectedProduct(null);
+          }}
+        />
+      )}
+
+      {/* Private Acquisition / Concierge Inquiry Modal */}
+      {inquiryProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#08080a]/90 backdrop-blur-md">
+          <div className="bg-[#121216] border border-[#d4af37]/40 w-full max-w-lg p-8 relative champagne-glow">
+            <button
+              onClick={() => setInquiryProduct(null)}
+              className="absolute top-4 right-4 text-[#71717a] hover:text-[#f4f4f5] p-2"
+            >
+              ✕
+            </button>
+
+            <span className="text-[10px] font-semibold tracking-[0.3em] text-[#d4af37] uppercase block mb-1">
+              PRIVATE ALLOCATION REQUEST
+            </span>
+            <h3 className="font-serif-luxury text-2xl text-[#f4f4f5] mb-2">
+              {inquiryProduct.title}
+            </h3>
+            <p className="text-xs text-[#d4af37] font-semibold tracking-wider mb-4">
+              Listed Appraisal: {inquiryProduct.price?.currency || "USD"} {Number(inquiryProduct.price?.amount || 0).toLocaleString()}
+            </p>
+
+            {inquirySuccess ? (
+              <div className="p-6 bg-[#09090b] border border-[#d4af37] text-center space-y-2">
+                <span className="font-serif-luxury text-xl text-[#f2ca50] block">Allocation Requested</span>
+                <p className="text-xs text-[#a1a1aa] font-light">
+                  Your acquisition allocation has been logged with the atelier director. Our private liaison will contact you within 2 hours.
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleAcquisitionSubmit} className="space-y-4">
+                <p className="text-xs text-[#a1a1aa] font-light leading-relaxed">
+                  Submit your request to secure this archival creation. The managing atelier will be notified immediately to prepare the provenance credentials and shipping ledger.
+                </p>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-semibold tracking-[0.2em] text-[#a1a1aa] uppercase">
+                    Client Full Name
+                  </label>
+                  <input
+                    type="text"
+                    defaultValue={user?.fullname || ""}
+                    placeholder="Julian Sterling"
+                    required
+                    className="w-full bg-[#0c0c0f] border border-[#27272a] text-xs text-[#f4f4f5] p-3 focus:outline-none focus:border-[#d4af37]"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-semibold tracking-[0.2em] text-[#a1a1aa] uppercase">
+                    Delivery City / Private Residence
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. London, Paris, New York, Zurich"
+                    required
+                    className="w-full bg-[#0c0c0f] border border-[#27272a] text-xs text-[#f4f4f5] p-3 focus:outline-none focus:border-[#d4af37]"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-semibold tracking-[0.2em] text-[#a1a1aa] uppercase">
+                    Special Fitting or Archival Notes
+                  </label>
+                  <textarea
+                    rows={3}
+                    placeholder="Specify bespoke measurements or requested salon presentation..."
+                    className="w-full bg-[#0c0c0f] border border-[#27272a] text-xs text-[#f4f4f5] p-3 focus:outline-none focus:border-[#d4af37]"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-4 bg-[#d4af37] text-[#09090b] text-[11px] font-bold tracking-[0.28em] uppercase hover:bg-[#f2ca50] transition-colors cursor-pointer"
+                >
+                  Submit Confidential Allocation
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Footer */}
+      <AuthFooter />
+    </div>
+  );
+}
+
+// -------------------------------------------------------------
+// Component: BuyerProductCard
+// Tailored exclusively for high-fashion clients & patrons
+// -------------------------------------------------------------
+function BuyerProductCard({ product, onViewDossier, onAcquire }) {
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const images = product.images && product.images.length > 0
+    ? product.images
+    : [{ url: "https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=800&auto=format&fit=crop" }];
+
+  const formattedPrice = useMemo(() => {
+    const amt = Number(product.price?.amount || 0);
+    const curr = product.price?.currency || "USD";
+    return `${curr} ${amt.toLocaleString()}`;
+  }, [product.price]);
+
+  return (
+    <div className="group bg-[#111115] border border-[#222228] hover:border-[#d4af37]/60 transition-all duration-300 flex flex-col justify-between overflow-hidden champagne-glow">
+      {/* Imagery with multi-image navigation */}
+      <div className="relative aspect-[3/4] bg-[#0c0c10] overflow-hidden">
+        <img
+          src={images[activeImageIndex]?.url}
+          alt={product.title}
+          className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
+        />
+
+        {/* Currency & Price Tag Overlay */}
+        <div className="absolute top-3 left-3 bg-[#08080a]/90 backdrop-blur-md border border-[#d4af37]/40 px-3 py-1">
+          <span className="text-[10px] font-bold tracking-widest text-[#f2ca50] uppercase">
+            {formattedPrice}
+          </span>
+        </div>
+
+        {/* Multi-image indicators if > 1 image */}
+        {images.length > 1 && (
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+            {images.map((_, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveImageIndex(idx);
+                }}
+                className={`w-2 h-2 rounded-full transition-all ${
+                  activeImageIndex === idx ? "bg-[#d4af37] w-4" : "bg-[#f4f4f5]/40 hover:bg-[#f4f4f5]"
+                }`}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Atelier Badge */}
+        <div className="absolute top-3 right-3 bg-[#08080a]/80 backdrop-blur-sm border border-[#27272a] px-2 py-0.5">
+          <span className="text-[9px] font-medium tracking-widest text-[#a1a1aa] uppercase">
+            {images.length} Frames
+          </span>
+        </div>
+      </div>
+
+      {/* Details Area */}
+      <div className="p-5 flex flex-col grow justify-between space-y-4">
+        <div>
+          <span className="text-[9px] font-semibold tracking-[0.25em] text-[#d4af37] uppercase block mb-1">
+            {product.seller?.fullname || "Atelier Master"}
+          </span>
+          <h3 className="font-serif-luxury text-lg text-[#f4f4f5] tracking-wide line-clamp-1 group-hover:text-[#f2ca50] transition-colors">
+            {product.title}
+          </h3>
+          <p className="text-xs text-[#a1a1aa] font-light mt-1.5 line-clamp-2 leading-relaxed">
+            {product.description}
+          </p>
+        </div>
+
+        {/* Client Action Buttons */}
+        <div className="pt-2 border-t border-[#202026] flex gap-2">
+          <button
+            type="button"
+            onClick={onViewDossier}
+            className="grow py-2.5 px-3 border border-[#27272a] hover:border-[#d4af37]/60 text-[#a1a1aa] hover:text-[#f4f4f5] text-[10px] font-semibold tracking-[0.2em] uppercase transition-colors cursor-pointer"
+          >
+            View Dossier
+          </button>
+          <button
+            type="button"
+            onClick={onAcquire}
+            className="py-2.5 px-4 bg-[#d4af37] hover:bg-[#f2ca50] text-[#09090b] text-[10px] font-bold tracking-[0.22em] uppercase transition-colors cursor-pointer"
+          >
+            Acquire
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// -------------------------------------------------------------
+// Component: AtelierDossierModal
+// Complete archival view showing all up to 7 images & story
+// -------------------------------------------------------------
+function AtelierDossierModal({ product, onClose, onAcquire }) {
+  const [selectedImg, setSelectedImg] = useState(0);
+  const images = product.images && product.images.length > 0 ? product.images : [];
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8 bg-[#08080a]/95 backdrop-blur-lg">
+      <div className="bg-[#121216] border border-[#27272a] w-full max-w-5xl max-h-[90vh] overflow-y-auto p-6 sm:p-10 relative flex flex-col lg:flex-row gap-8 champagne-glow">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-[#71717a] hover:text-[#f4f4f5] p-2 text-xl"
+        >
+          ✕
+        </button>
+
+        {/* Left: Big Gallery */}
+        <div className="lg:w-1/2 flex flex-col gap-3">
+          <div className="aspect-[3/4] bg-[#0c0c0f] border border-[#222228] overflow-hidden">
+            <img
+              src={images[selectedImg]?.url}
+              alt={product.title}
+              className="w-full h-full object-cover object-top"
+            />
+          </div>
+
+          {/* Thumbnail Strip */}
+          {images.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {images.map((img, i) => (
+                <button
+                  key={i}
+                  onClick={() => setSelectedImg(i)}
+                  className={`w-16 h-20 shrink-0 border overflow-hidden transition-all ${
+                    selectedImg === i ? "border-[#d4af37]" : "border-[#27272a] opacity-50"
+                  }`}
+                >
+                  <img src={img.url} alt="" className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Right: Archival Story & Specifications */}
+        <div className="lg:w-1/2 flex flex-col justify-between space-y-6">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-px bg-[#d4af37]" />
+              <span className="text-[10px] font-semibold tracking-[0.3em] text-[#d4af37] uppercase">
+                ARCHIVAL DOSSIER • {product.seller?.fullname || "Private Atelier"}
+              </span>
+            </div>
+
+            <h2 className="font-serif-luxury text-3xl sm:text-4xl text-[#f4f4f5] leading-tight">
+              {product.title}
+            </h2>
+
+            <div className="text-xl font-bold tracking-wider text-[#f2ca50] py-2 border-y border-[#202026]">
+              {product.price?.currency || "USD"} {Number(product.price?.amount || 0).toLocaleString()}
+            </div>
+
+            <div>
+              <span className="text-[10px] font-semibold tracking-[0.2em] text-[#a1a1aa] uppercase block mb-1">
+                Atelier Narrative & Specifications
+              </span>
+              <p className="text-sm text-[#d4d4d8] font-light leading-relaxed whitespace-pre-line">
+                {product.description}
+              </p>
+            </div>
+
+            <div className="p-4 bg-[#0c0c10] border border-[#27272a] space-y-2">
+              <div className="flex justify-between text-xs">
+                <span className="text-[#71717a]">Archival Status:</span>
+                <span className="text-[#d4af37] font-semibold">Verified Original</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-[#71717a]">Archival Frames:</span>
+                <span className="text-[#f4f4f5]">{images.length} High-Res Exposures</span>
+              </div>
+              <div className="flex justify-between text-xs">
+                <span className="text-[#71717a]">Acquisition Channel:</span>
+                <span className="text-[#f4f4f5]">Private Client Allocation</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-4 pt-4 border-t border-[#202026]">
+            <button
+              onClick={onClose}
+              className="py-3 px-6 border border-[#27272a] text-[#a1a1aa] hover:text-[#f4f4f5] text-[11px] font-semibold tracking-[0.2em] uppercase transition-colors cursor-pointer"
+            >
+              Close Dossier
+            </button>
+            <button
+              onClick={onAcquire}
+              className="grow py-3 px-6 bg-[#d4af37] hover:bg-[#f2ca50] text-[#09090b] text-[11px] font-bold tracking-[0.25em] uppercase transition-colors cursor-pointer"
+            >
+              Request Allocation
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
