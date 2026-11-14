@@ -12,8 +12,13 @@ export default function ProductDetail() {
   const { user } = useAuth();
   const { handleGetProductById, loading, error } = useProduct();
 
-  const currentProduct = useSelector((state) => state.product.currentProduct);
-  const [product, setProduct] = useState(null);
+  const catalogProducts = useSelector((state) => state.product.catalogProducts);
+  const cachedProduct = useMemo(
+    () => (Array.isArray(catalogProducts) ? catalogProducts.find((p) => p._id === id) : null),
+    [catalogProducts, id]
+  );
+
+  const [product, setProduct] = useState(cachedProduct || null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [copiedId, setCopiedId] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
@@ -31,17 +36,19 @@ export default function ProductDetail() {
   }, [id]);
 
   useEffect(() => {
-    if (currentProduct && currentProduct._id === id) {
-      setProduct(currentProduct);
+    if (!product && cachedProduct) {
+      setProduct(cachedProduct);
     }
-  }, [currentProduct, id]);
+  }, [cachedProduct, product]);
 
   const images = useMemo(() => {
-    if (Array.isArray(product?.images) && product.images.length > 0) {
-      return product.images;
-    }
-    return [{ url: "https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=1200&auto=format&fit=crop" }];
-  }, [product]);
+    if (!product?.images || !Array.isArray(product.images)) return [];
+    return product.images
+      .map((img) => (typeof img === "string" ? { url: img } : img))
+      .filter((img) => Boolean(img?.url));
+  }, [product?.images]);
+
+  const activeImageUrl = images[activeImageIndex]?.url;
 
   const formattedPrice = useMemo(() => {
     if (!product?.price) return "";
@@ -152,20 +159,33 @@ export default function ProductDetail() {
             {/* Left: Gallery Stage */}
             <div className="lg:col-span-7 xl:col-span-7 space-y-4">
               {/* Main High-Res Frame */}
-              <div className="relative aspect-[3/4] bg-[#0c0c10] border border-[#232329] overflow-hidden champagne-glow">
-                <img
-                  src={images[activeImageIndex]?.url}
-                  alt={`${product.title} - Frame ${activeImageIndex + 1}`}
-                  className="w-full h-full object-cover object-top transition-transform duration-700 ease-out hover:scale-102"
-                />
+              <div className="relative aspect-[3/4] bg-[#0c0c10] border border-[#232329] overflow-hidden champagne-glow flex items-center justify-center">
+                {activeImageUrl ? (
+                  <img
+                    src={activeImageUrl}
+                    alt={`${product.title} - Frame ${activeImageIndex + 1}`}
+                    className="w-full h-full object-cover object-top transition-transform duration-700 ease-out hover:scale-102"
+                  />
+                ) : (
+                  <div className="text-center p-8 space-y-2">
+                    <span className="text-[10px] font-semibold tracking-[0.25em] text-[#71717a] uppercase block">
+                      No Imagery Documented
+                    </span>
+                    <p className="text-xs text-[#52525b] font-light">
+                      Visual exposures have not been cataloged for this item.
+                    </p>
+                  </div>
+                )}
 
                 {/* Frame Counter Tag */}
-                <div className="absolute top-4 left-4 bg-[#08080a]/90 backdrop-blur-md border border-[#d4af37]/40 px-3 py-1.5 flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37] animate-pulse" />
-                  <span className="text-[10px] font-semibold tracking-widest text-[#f2ca50] uppercase">
-                    Frame {String(activeImageIndex + 1).padStart(2, "0")} / {String(images.length).padStart(2, "0")}
-                  </span>
-                </div>
+                {images.length > 0 && (
+                  <div className="absolute top-4 left-4 bg-[#08080a]/90 backdrop-blur-md border border-[#d4af37]/40 px-3 py-1.5 flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37] animate-pulse" />
+                    <span className="text-[10px] font-semibold tracking-widest text-[#f2ca50] uppercase">
+                      Frame {String(activeImageIndex + 1).padStart(2, "0")} / {String(images.length).padStart(2, "0")}
+                    </span>
+                  </div>
+                )}
 
                 {/* Frame Navigation Arrows */}
                 {images.length > 1 && (
@@ -287,7 +307,9 @@ export default function ProductDetail() {
 
                   <div className="flex items-center justify-between py-1 border-b border-[#1b1b22]">
                     <span className="text-[#71717a]">Photographic Exposures:</span>
-                    <span className="text-[#f4f4f5] font-medium">{images.length} Archival Frames</span>
+                    <span className="text-[#f4f4f5] font-medium">
+                      {images.length} {images.length === 1 ? "Archival Frame" : "Archival Frames"}
+                    </span>
                   </div>
 
                   <div className="flex items-center justify-between py-1 border-b border-[#1b1b22]">
@@ -469,4 +491,3 @@ export default function ProductDetail() {
     </div>
   );
 }
-

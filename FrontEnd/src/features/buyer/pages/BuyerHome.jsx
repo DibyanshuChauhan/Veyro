@@ -448,9 +448,14 @@ export default function BuyerHome() {
 
 function BuyerProductCard({ product, onAcquire }) {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const images = Array.isArray(product.images) && product.images.length > 0
-    ? product.images
-    : [{ url: "https://images.unsplash.com/photo-1509631179647-0177331693ae?q=80&w=800&auto=format&fit=crop" }];
+  const images = useMemo(() => {
+    if (!product?.images || !Array.isArray(product.images)) return [];
+    return product.images
+      .map((img) => (typeof img === "string" ? { url: img } : img))
+      .filter((img) => Boolean(img?.url));
+  }, [product?.images]);
+
+  const activeImageUrl = images[activeImageIndex]?.url;
 
   const formattedPrice = useMemo(() => {
     const amt = Number(product.price?.amount || 0);
@@ -461,11 +466,17 @@ function BuyerProductCard({ product, onAcquire }) {
   return (
     <div className="group bg-[#111115] border border-[#222228] hover:border-[#d4af37]/60 transition-all duration-300 flex flex-col justify-between overflow-hidden champagne-glow">
       <Link to={`/products/${product._id}`} className="relative aspect-[3/4] bg-[#0c0c10] overflow-hidden block">
-        <img
-          src={images[activeImageIndex]?.url}
-          alt={product.title}
-          className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
-        />
+        {activeImageUrl ? (
+          <img
+            src={activeImageUrl}
+            alt={product.title}
+            className="w-full h-full object-cover object-top transition-transform duration-700 ease-out group-hover:scale-105"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-[10px] uppercase tracking-widest text-[#71717a]">
+            No Imagery Recorded
+          </div>
+        )}
 
         <div className="absolute top-3 left-3 bg-[#08080a]/90 backdrop-blur-md border border-[#d4af37]/40 px-3 py-1">
           <span className="text-[10px] font-bold tracking-widest text-[#f2ca50] uppercase">
@@ -492,11 +503,13 @@ function BuyerProductCard({ product, onAcquire }) {
           </div>
         )}
 
-        <div className="absolute top-3 right-3 bg-[#08080a]/80 backdrop-blur-sm border border-[#27272a] px-2 py-0.5">
-          <span className="text-[9px] font-medium tracking-widest text-[#a1a1aa] uppercase">
-            {images.length} {images.length === 1 ? "Frame" : "Frames"}
-          </span>
-        </div>
+        {images.length > 0 && (
+          <div className="absolute top-3 right-3 bg-[#08080a]/80 backdrop-blur-sm border border-[#27272a] px-2 py-0.5">
+            <span className="text-[9px] font-medium tracking-widest text-[#a1a1aa] uppercase">
+              {images.length} {images.length === 1 ? "Frame" : "Frames"}
+            </span>
+          </div>
+        )}
       </Link>
 
       <div className="p-5 flex flex-col grow justify-between space-y-4">
