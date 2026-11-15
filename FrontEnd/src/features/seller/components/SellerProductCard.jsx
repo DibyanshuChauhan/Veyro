@@ -200,7 +200,7 @@ export default function SellerProductCard({ product, onOpenGallery }) {
               maximumFractionDigits: 2
             })}{" "}
             <span className="text-xs font-sans-luxury text-[#e5e1e4]">
-              {product.price?.currency || "USD"}
+              {product.price?.currency || "INR"}
             </span>
           </span>
         </div>

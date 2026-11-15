@@ -153,8 +153,10 @@ export default function Dashboard() {
               02. PORTFOLIO VALUATION
             </span>
             <div className="font-serif-luxury text-2xl sm:text-3xl text-[#f2ca50] tracking-wide mb-1">
-              {totalValuation.toLocaleString("en-US", { maximumFractionDigits: 0 })}{" "}
-              <span className="text-sm font-light text-[#a1a1aa] font-sans-luxury">USD Eq.</span>
+              ₹ {totalValuation.toLocaleString("en-IN", { maximumFractionDigits: 0 })}{" "}
+              <span className="text-sm font-light text-[#a1a1aa] font-sans-luxury">
+                {selectedCurrency === "ALL" ? "INR" : selectedCurrency}
+              </span>
             </div>
             <p className="text-[11px] text-[#71717a] font-light">
               Combined appraisal across creations
@@ -214,11 +216,11 @@ export default function Dashboard() {
                 className="bg-[#0c0c0f] border border-[#27272a] text-xs text-[#a1a1aa] py-2.5 pl-3 pr-8 focus:border-[#d4af37] focus:outline-none appearance-none cursor-pointer tracking-wider uppercase font-medium"
               >
                 <option value="ALL">All Currencies</option>
+                <option value="INR">INR (₹)</option>
                 <option value="USD">USD ($)</option>
                 <option value="EUR">EUR (€)</option>
                 <option value="GBP">GBP (£)</option>
                 <option value="JPY">JPY (¥)</option>
-                <option value="INR">INR (₹)</option>
               </select>
               <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#71717a] pointer-events-none text-[10px]">
                 ▼

@@ -21,7 +21,7 @@ const productSchema = new mongoose.Schema({
         },
         currency: {
             type: String,
-            enum: ["USD", "EUR", "GBP", "JPY", "INR"],
+            enum: ["INR", "USD", "EUR", "GBP", "JPY"],
             default: "INR"
         }
     },
@@ -58,7 +58,7 @@ const productSchema = new mongoose.Schema({
                 },
                 currency: {
                     type: String,
-                    enum: ["USD", "EUR", "GBP", "JPY", "INR"],
+                    enum: ["INR", "USD", "EUR", "GBP", "JPY"],
                     default: "INR"
                 }
             }

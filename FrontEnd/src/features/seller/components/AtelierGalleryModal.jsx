@@ -59,7 +59,7 @@ export default function AtelierGalleryModal({ product, initialIndex = 0, onClose
             {Number(product.price?.amount || 0).toLocaleString("en-US", {
               maximumFractionDigits: 2
             })}{" "}
-            {product.price?.currency || "USD"}
+            {product.price?.currency || "INR"}
           </span>
           <button
             type="button"

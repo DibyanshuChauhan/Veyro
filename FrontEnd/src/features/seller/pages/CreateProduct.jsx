@@ -5,7 +5,7 @@ import { useAuth } from "../../auth/hook/useAuth";
 import AuthHeader from "../../auth/components/AuthHeader";
 import AuthFooter from "../../auth/components/AuthFooter";
 
-const CURRENCIES = ["USD", "EUR", "GBP", "JPY", "INR"];
+const CURRENCIES = ["INR", "USD", "EUR", "GBP", "JPY"];
 const MAX_IMAGES = 7;
 
 const CreateProduct = () => {
@@ -18,7 +18,7 @@ const CreateProduct = () => {
     title: "",
     description: "",
     priceAmount: "",
-    priceCurrency: "USD",
+    priceCurrency: "INR",
   });
   const [images, setImages] = useState([]);
   const [variants, setVariants] = useState([]);
@@ -81,7 +81,7 @@ const CreateProduct = () => {
         id: Date.now() + Math.random().toString(),
         stock: "1",
         priceAmount: formData.priceAmount || "",
-        priceCurrency: formData.priceCurrency || "USD",
+        priceCurrency: formData.priceCurrency || "INR",
         attributes: [
           { key: "Size", value: "" },
           { key: "Color", value: "" }

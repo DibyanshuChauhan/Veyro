@@ -5,7 +5,7 @@ import { useAuth } from "../../auth/hook/useAuth";
 import AuthHeader from "../../auth/components/AuthHeader";
 import AuthFooter from "../../auth/components/AuthFooter";
 
-const CURRENCIES = ["USD", "EUR", "GBP", "JPY", "INR"];
+const CURRENCIES = ["INR", "USD", "EUR", "GBP", "JPY"];
 const MAX_IMAGES = 7;
 
 export default function EditProduct() {
@@ -19,7 +19,7 @@ export default function EditProduct() {
     title: "",
     description: "",
     priceAmount: "",
-    priceCurrency: "USD",
+    priceCurrency: "INR",
   });
   const [existingImages, setExistingImages] = useState([]);
   const [newImages, setNewImages] = useState([]);
@@ -39,7 +39,7 @@ export default function EditProduct() {
               title: prod.title || "",
               description: prod.description || "",
               priceAmount: prod.price?.amount ? String(prod.price.amount) : "",
-              priceCurrency: prod.price?.currency || "USD",
+              priceCurrency: prod.price?.currency || "INR",
             });
             const imgs = Array.isArray(prod.images)
               ? prod.images.map((img) => (typeof img === "string" ? img : img?.url)).filter(Boolean)
@@ -59,7 +59,7 @@ export default function EditProduct() {
                 id: v._id || Math.random().toString(),
                 stock: v.stock !== undefined ? String(v.stock) : "0",
                 priceAmount: v.price?.amount ? String(v.price.amount) : "",
-                priceCurrency: v.price?.currency || prod.price?.currency || "USD",
+                priceCurrency: v.price?.currency || prod.price?.currency || "INR",
                 attributes: attrs.length > 0 ? attrs : [{ key: "Size", value: "" }],
                 existingImages: Array.isArray(v.images)
                   ? v.images.map((img) => (typeof img === "string" ? img : img?.url)).filter(Boolean)
@@ -138,7 +138,7 @@ export default function EditProduct() {
         id: Date.now() + Math.random().toString(),
         stock: "1",
         priceAmount: formData.priceAmount || "",
-        priceCurrency: formData.priceCurrency || "USD",
+        priceCurrency: formData.priceCurrency || "INR",
         attributes: [
           { key: "Size", value: "" },
           { key: "Color", value: "" }
