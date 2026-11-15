@@ -43,3 +43,12 @@ export const getProductById = async (id) => {
         throw error;
     }
 };
+
+export const updateProduct = async (id, formData) => {
+    try {
+        const response = await api.put(`/${id}`, formData);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};

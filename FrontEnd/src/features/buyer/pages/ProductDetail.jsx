@@ -19,6 +19,7 @@ export default function ProductDetail() {
   );
 
   const [product, setProduct] = useState(cachedProduct || null);
+  const [selectedVariantIndex, setSelectedVariantIndex] = useState(-1);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [copiedId, setCopiedId] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
@@ -41,21 +42,35 @@ export default function ProductDetail() {
     }
   }, [cachedProduct, product]);
 
+  const activeVariant = useMemo(() => {
+    if (selectedVariantIndex >= 0 && product?.variants?.[selectedVariantIndex]) {
+      return product.variants[selectedVariantIndex];
+    }
+    return null;
+  }, [product?.variants, selectedVariantIndex]);
+
   const images = useMemo(() => {
+    if (activeVariant && Array.isArray(activeVariant.images) && activeVariant.images.length > 0) {
+      const vImgs = activeVariant.images
+        .map((img) => (typeof img === "string" ? { url: img } : img))
+        .filter((img) => Boolean(img?.url));
+      if (vImgs.length > 0) return vImgs;
+    }
     if (!product?.images || !Array.isArray(product.images)) return [];
     return product.images
       .map((img) => (typeof img === "string" ? { url: img } : img))
       .filter((img) => Boolean(img?.url));
-  }, [product?.images]);
+  }, [product?.images, activeVariant]);
 
   const activeImageUrl = images[activeImageIndex]?.url;
 
   const formattedPrice = useMemo(() => {
-    if (!product?.price) return "";
-    const amt = Number(product.price.amount || 0);
-    const curr = product.price.currency || "INR";
+    const targetPrice = activeVariant?.price || product?.price;
+    if (!targetPrice) return "";
+    const amt = Number(targetPrice.amount || 0);
+    const curr = targetPrice.currency || "INR";
     return `${curr} ${amt.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
-  }, [product?.price]);
+  }, [product?.price, activeVariant]);
 
   const formattedDate = useMemo(() => {
     if (!product?.createdAt) return null;
@@ -272,6 +287,85 @@ export default function ProductDetail() {
                     Appraisal Valuation
                   </span>
                 </div>
+
+                {/* Variant Editions Selector */}
+                {product.variants && product.variants.length > 0 && (
+                  <div className="space-y-3 pt-4 border-t border-[#202026]">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-semibold tracking-[0.25em] text-[#d4af37] uppercase">
+                        Archival Editions ({product.variants.length + 1})
+                      </span>
+                      {activeVariant && (
+                        <span className="text-[10px] text-[#a1a1aa] tracking-wider uppercase">
+                          Available: {activeVariant.stock !== undefined ? activeVariant.stock : 0} units
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedVariantIndex(-1);
+                          setActiveImageIndex(0);
+                        }}
+                        className={`px-3 py-2 border text-[10px] font-semibold tracking-[0.18em] uppercase transition-all cursor-pointer ${
+                          selectedVariantIndex === -1
+                            ? "border-[#d4af37] bg-[#d4af37] text-[#09090b]"
+                            : "border-[#27272a] bg-[#101014] text-[#a1a1aa] hover:border-[#d4af37]/50 hover:text-[#f4f4f5]"
+                        }`}
+                      >
+                        Signature Edition
+                      </button>
+
+                      {product.variants.map((v, idx) => {
+                        const attrSummary = v.attributes
+                          ? (v.attributes instanceof Map
+                              ? Array.from(v.attributes.entries())
+                              : Object.entries(v.attributes))
+                              .map(([k, val]) => `${k}: ${val}`)
+                              .join(" • ")
+                          : "";
+                        const label = attrSummary || `Edition ${idx + 1}`;
+                        const isSelected = selectedVariantIndex === idx;
+
+                        return (
+                          <button
+                            key={v._id || idx}
+                            type="button"
+                            onClick={() => {
+                              setSelectedVariantIndex(idx);
+                              setActiveImageIndex(0);
+                            }}
+                            className={`px-3 py-2 border text-[10px] font-semibold tracking-[0.18em] uppercase transition-all cursor-pointer ${
+                              isSelected
+                                ? "border-[#d4af37] bg-[#d4af37] text-[#09090b]"
+                                : "border-[#27272a] bg-[#101014] text-[#a1a1aa] hover:border-[#d4af37]/50 hover:text-[#f4f4f5]"
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {activeVariant && activeVariant.attributes && (
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        {(activeVariant.attributes instanceof Map
+                          ? Array.from(activeVariant.attributes.entries())
+                          : Object.entries(activeVariant.attributes)
+                        ).map(([k, val], i) => (
+                          <span
+                            key={i}
+                            className="px-2.5 py-1 bg-[#14141a] border border-[#27272a] text-[9px] text-[#f2ca50] tracking-wider uppercase"
+                          >
+                            <strong className="text-[#a1a1aa] font-medium">{k}:</strong> {val}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Archival Narrative Description */}
@@ -311,6 +405,24 @@ export default function ProductDetail() {
                       {images.length} {images.length === 1 ? "Archival Frame" : "Archival Frames"}
                     </span>
                   </div>
+
+                  {product.variants && product.variants.length > 0 && (
+                    <div className="flex items-center justify-between py-1 border-b border-[#1b1b22]">
+                      <span className="text-[#71717a]">Selected Edition:</span>
+                      <span className="text-[#f2ca50] font-medium">
+                        {activeVariant ? "Custom Edition Variant" : "Signature Edition"}
+                      </span>
+                    </div>
+                  )}
+
+                  {activeVariant && (
+                    <div className="flex items-center justify-between py-1 border-b border-[#1b1b22]">
+                      <span className="text-[#71717a]">Edition Inventory:</span>
+                      <span className="text-[#f4f4f5] font-medium">
+                        {activeVariant.stock !== undefined ? `${activeVariant.stock} pieces` : "Archive allocation"}
+                      </span>
+                    </div>
+                  )}
 
                   <div className="flex items-center justify-between py-1 border-b border-[#1b1b22]">
                     <span className="text-[#71717a]">Atelier Representative:</span>

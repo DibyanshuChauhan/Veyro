@@ -21,6 +21,7 @@ const CreateProduct = () => {
     priceCurrency: "USD",
   });
   const [images, setImages] = useState([]);
+  const [variants, setVariants] = useState([]);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -73,6 +74,105 @@ const CreateProduct = () => {
     });
   };
 
+  const addVariant = () => {
+    setVariants((prev) => [
+      ...prev,
+      {
+        id: Date.now() + Math.random().toString(),
+        stock: "1",
+        priceAmount: formData.priceAmount || "",
+        priceCurrency: formData.priceCurrency || "USD",
+        attributes: [
+          { key: "Size", value: "" },
+          { key: "Color", value: "" }
+        ],
+        newImages: []
+      }
+    ]);
+  };
+
+  const removeVariant = (variantIndex) => {
+    setVariants((prev) => {
+      const target = prev[variantIndex];
+      target?.newImages?.forEach((img) => URL.revokeObjectURL(img.preview));
+      return prev.filter((_, idx) => idx !== variantIndex);
+    });
+  };
+
+  const updateVariantField = (variantIndex, field, value) => {
+    setVariants((prev) =>
+      prev.map((v, idx) => (idx === variantIndex ? { ...v, [field]: value } : v))
+    );
+  };
+
+  const addVariantAttribute = (variantIndex) => {
+    setVariants((prev) =>
+      prev.map((v, idx) => {
+        if (idx !== variantIndex) return v;
+        return {
+          ...v,
+          attributes: [...v.attributes, { key: "", value: "" }]
+        };
+      })
+    );
+  };
+
+  const updateVariantAttribute = (variantIndex, attrIndex, field, value) => {
+    setVariants((prev) =>
+      prev.map((v, idx) => {
+        if (idx !== variantIndex) return v;
+        const updatedAttrs = v.attributes.map((attr, aIdx) =>
+          aIdx === attrIndex ? { ...attr, [field]: value } : attr
+        );
+        return { ...v, attributes: updatedAttrs };
+      })
+    );
+  };
+
+  const removeVariantAttribute = (variantIndex, attrIndex) => {
+    setVariants((prev) =>
+      prev.map((v, idx) => {
+        if (idx !== variantIndex) return v;
+        return {
+          ...v,
+          attributes: v.attributes.filter((_, aIdx) => aIdx !== attrIndex)
+        };
+      })
+    );
+  };
+
+  const handleVariantFiles = (variantIndex, fileList) => {
+    if (!fileList || fileList.length === 0) return;
+    const incoming = Array.from(fileList);
+    const valid = [];
+    for (const file of incoming) {
+      if (!file.type.startsWith("image/")) continue;
+      valid.push({
+        file,
+        preview: URL.createObjectURL(file)
+      });
+    }
+    setVariants((prev) =>
+      prev.map((v, idx) =>
+        idx === variantIndex ? { ...v, newImages: [...v.newImages, ...valid] } : v
+      )
+    );
+  };
+
+  const removeVariantNewImage = (variantIndex, imgIndex) => {
+    setVariants((prev) =>
+      prev.map((v, idx) => {
+        if (idx !== variantIndex) return v;
+        const target = v.newImages[imgIndex];
+        if (target?.preview) URL.revokeObjectURL(target.preview);
+        return {
+          ...v,
+          newImages: v.newImages.filter((_, i) => i !== imgIndex)
+        };
+      })
+    );
+  };
+
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDragOver(false);
@@ -123,9 +223,35 @@ const CreateProduct = () => {
         data.append("images", item.file);
       });
 
+      if (variants.length > 0) {
+        const variantsPayload = variants.map((v) => ({
+          stock: Number(v.stock) >= 0 ? Number(v.stock) : 0,
+          price: {
+            amount: parseFloat(v.priceAmount) > 0 ? parseFloat(v.priceAmount) : parsedAmount,
+            currency: v.priceCurrency || formData.priceCurrency
+          },
+          attributes: v.attributes.reduce((acc, curr) => {
+            if (curr.key && curr.key.trim()) {
+              acc[curr.key.trim()] = String(curr.value || "").trim();
+            }
+            return acc;
+          }, {})
+        }));
+        data.append("variants", JSON.stringify(variantsPayload));
+
+        variants.forEach((v, vIdx) => {
+          (v.newImages || []).forEach((item) => {
+            data.append(`variant_${vIdx}_images`, item.file);
+          });
+        });
+      }
+
       await handleAddProducts(data);
 
       images.forEach((img) => URL.revokeObjectURL(img.preview));
+      variants.forEach((v) => {
+        v.newImages?.forEach((img) => URL.revokeObjectURL(img.preview));
+      });
       navigate("/dashboard");
     } catch (err) {
       const serverMsg =
@@ -391,6 +517,178 @@ const CreateProduct = () => {
                       );
                     })}
                   </div>
+                </div>
+
+                {/* Archival Variants Section */}
+                <div className="space-y-4 pt-6 border-t border-[#1e1e24]">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <h2 className="text-xs font-semibold tracking-[0.25em] text-[#d4af37] uppercase">
+                        Product Variants & Editions (Optional)
+                      </h2>
+                      <p className="text-[11px] text-[#71717a] font-light mt-0.5">
+                        Add distinct variations with custom attributes (size, color, material), individual pricing, inventory stock, and photography.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={addVariant}
+                      className="px-3.5 py-2 border border-[#d4af37]/60 hover:bg-[#d4af37]/10 text-[#f2ca50] text-[10px] font-semibold tracking-[0.2em] uppercase transition-all cursor-pointer inline-flex items-center gap-1.5"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                      </svg>
+                      Add Variant
+                    </button>
+                  </div>
+
+                  {variants.length === 0 ? (
+                    <div className="p-4 border border-[#1e1e24] bg-[#0d0d11] text-center text-[#71717a] text-xs font-light">
+                      No variants added. This creation will be registered as a single signature piece. Click &ldquo;Add Variant&rdquo; above if you wish to offer multiple sizes, colorways, or editions.
+                    </div>
+                  ) : (
+                    <div className="space-y-5">
+                      {variants.map((v, vIdx) => (
+                        <div key={v.id || vIdx} className="p-4 sm:p-5 border border-[#23232a] bg-[#0c0c10] space-y-4 relative">
+                          <div className="flex items-center justify-between pb-3 border-b border-[#1b1b22]">
+                            <span className="text-[10px] font-bold tracking-[0.2em] text-[#f2ca50] uppercase">
+                              Variant Edition #{String(vIdx + 1).padStart(2, "0")}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => removeVariant(vIdx)}
+                              className="text-[10px] tracking-wider text-[#ffb4ab] hover:underline uppercase cursor-pointer"
+                            >
+                              Remove Variant
+                            </button>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <div>
+                              <label className="block text-[9px] font-medium tracking-[0.2em] text-[#a1a1aa] uppercase mb-1.5">
+                                Variant Price
+                              </label>
+                              <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={v.priceAmount}
+                                onChange={(e) => updateVariantField(vIdx, "priceAmount", e.target.value)}
+                                placeholder={formData.priceAmount || "0.00"}
+                                className="w-full bg-[#121216] border border-[#27272a] focus:border-[#d4af37] px-3 py-2 text-xs text-[#f4f4f5] outline-none"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-[9px] font-medium tracking-[0.2em] text-[#a1a1aa] uppercase mb-1.5">
+                                Currency
+                              </label>
+                              <select
+                                value={v.priceCurrency}
+                                onChange={(e) => updateVariantField(vIdx, "priceCurrency", e.target.value)}
+                                className="w-full bg-[#121216] border border-[#27272a] focus:border-[#d4af37] px-3 py-2 text-xs text-[#f4f4f5] outline-none cursor-pointer"
+                              >
+                                {CURRENCIES.map((c) => (
+                                  <option key={c} value={c} className="bg-[#121216] text-[#e5e1e4]">
+                                    {c}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-[9px] font-medium tracking-[0.2em] text-[#a1a1aa] uppercase mb-1.5">
+                                Stock Count
+                              </label>
+                              <input
+                                type="number"
+                                min="0"
+                                value={v.stock}
+                                onChange={(e) => updateVariantField(vIdx, "stock", e.target.value)}
+                                placeholder="0"
+                                className="w-full bg-[#121216] border border-[#27272a] focus:border-[#d4af37] px-3 py-2 text-xs text-[#f4f4f5] outline-none"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Attributes Map */}
+                          <div className="space-y-2 pt-2 border-t border-[#1b1b22]">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[9px] font-semibold tracking-[0.2em] text-[#a1a1aa] uppercase">
+                                Specifications & Attributes (e.g. Size, Color)
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => addVariantAttribute(vIdx)}
+                                className="text-[9px] tracking-wider text-[#d4af37] hover:underline uppercase cursor-pointer"
+                              >
+                                + Add Attribute
+                              </button>
+                            </div>
+
+                            <div className="space-y-2">
+                              {v.attributes.map((attr, aIdx) => (
+                                <div key={aIdx} className="flex items-center gap-2">
+                                  <input
+                                    type="text"
+                                    value={attr.key}
+                                    onChange={(e) => updateVariantAttribute(vIdx, aIdx, "key", e.target.value)}
+                                    placeholder="Attribute Name (e.g. Size)"
+                                    className="w-1/3 bg-[#121216] border border-[#27272a] focus:border-[#d4af37] px-3 py-1.5 text-xs text-[#f4f4f5] outline-none"
+                                  />
+                                  <input
+                                    type="text"
+                                    value={attr.value}
+                                    onChange={(e) => updateVariantAttribute(vIdx, aIdx, "value", e.target.value)}
+                                    placeholder="Value (e.g. Medium, Gold, Silk)"
+                                    className="grow bg-[#121216] border border-[#27272a] focus:border-[#d4af37] px-3 py-1.5 text-xs text-[#f4f4f5] outline-none"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => removeVariantAttribute(vIdx, aIdx)}
+                                    className="p-1.5 text-[#71717a] hover:text-[#ffb4ab] cursor-pointer text-xs"
+                                    title="Remove Attribute"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Variant Images */}
+                          <div className="space-y-2 pt-2 border-t border-[#1b1b22]">
+                            <span className="text-[9px] font-semibold tracking-[0.2em] text-[#a1a1aa] uppercase block">
+                              Variant Specific Frames (Optional)
+                            </span>
+                            <div className="flex flex-wrap items-center gap-2">
+                              {v.newImages?.map((img, imgIdx) => (
+                                <div key={imgIdx} className="relative w-14 h-14 border border-[#d4af37]/60 bg-[#121216] overflow-hidden group">
+                                  <img src={img.preview} alt={`Variant frame ${imgIdx + 1}`} className="w-full h-full object-cover" />
+                                  <button
+                                    type="button"
+                                    onClick={() => removeVariantNewImage(vIdx, imgIdx)}
+                                    className="absolute inset-0 bg-[#09090b]/80 opacity-0 group-hover:opacity-100 flex items-center justify-center text-[#ffb4ab] text-xs cursor-pointer"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                              ))}
+                              <label className="w-14 h-14 border border-dashed border-[#2e2e38] hover:border-[#d4af37] flex flex-col items-center justify-center cursor-pointer text-[#71717a] hover:text-[#f2ca50] transition-colors">
+                                <span className="text-base leading-none">+</span>
+                                <span className="text-[8px] uppercase tracking-wider mt-0.5">Frame</span>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  multiple
+                                  onChange={(e) => handleVariantFiles(vIdx, e.target.files)}
+                                  className="hidden"
+                                />
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Submit button */}

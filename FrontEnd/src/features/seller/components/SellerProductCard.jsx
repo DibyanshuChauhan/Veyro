@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
 
 const extractImageUrls = (product) => {
   if (!product?.images || !Array.isArray(product.images)) return [];
@@ -64,6 +65,11 @@ export default function SellerProductCard({ product, onOpenGallery }) {
                 ? `Frame ${String(activeImageIndex + 1).padStart(2, "0")} / ${String(images.length).padStart(2, "0")}`
                 : "1 Frame"}
             </span>
+            {product.variants && product.variants.length > 0 && (
+              <span className="px-2 py-1 bg-[#09090b]/85 backdrop-blur-sm border border-[#d4af37]/40 text-[9px] font-semibold tracking-wider text-[#d4af37] uppercase">
+                {product.variants.length} {product.variants.length === 1 ? "Variant" : "Variants"}
+              </span>
+            )}
           </div>
 
           <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
@@ -199,13 +205,24 @@ export default function SellerProductCard({ product, onOpenGallery }) {
           </span>
         </div>
 
-        <button
-          type="button"
-          onClick={() => onOpenGallery(product, activeImageIndex)}
-          className="px-3.5 py-2 border border-[#27272a] hover:border-[#d4af37] text-[10px] font-semibold tracking-[0.2em] text-[#a1a1aa] hover:text-[#f4f4f5] transition-all uppercase cursor-pointer"
-        >
-          View All Frames ({images.length})
-        </button>
+        <div className="flex items-center gap-2">
+          <Link
+            to={`/products/edit/${product._id}`}
+            className="px-3.5 py-2 border border-[#d4af37]/50 hover:border-[#d4af37] text-[10px] font-semibold tracking-[0.2em] text-[#f2ca50] hover:text-[#09090b] hover:bg-[#d4af37] transition-all uppercase inline-flex items-center gap-1.5"
+          >
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+            Edit
+          </Link>
+          <button
+            type="button"
+            onClick={() => onOpenGallery(product, activeImageIndex)}
+            className="px-3.5 py-2 border border-[#27272a] hover:border-[#d4af37] text-[10px] font-semibold tracking-[0.2em] text-[#a1a1aa] hover:text-[#f4f4f5] transition-all uppercase cursor-pointer"
+          >
+            View All ({images.length})
+          </button>
+        </div>
       </div>
     </article>
   );

@@ -1,5 +1,5 @@
 import { setSellerProducts, setCatalogProducts, setCurrentProduct } from "../state/product.slice";
-import { createProducts, getProductsBySeller, getAllProducts, getProductById } from "../services/product.api";
+import { createProducts, getProductsBySeller, getAllProducts, getProductById, updateProduct } from "../services/product.api";
 import { useDispatch } from "react-redux";
 import { useState } from "react";
 
@@ -70,11 +70,26 @@ export const useProduct = () => {
         }
     };
 
+    const handleUpdateProduct = async (id, formData) => {
+        setLoading(true);
+        setError(null);
+        try {
+            const result = await updateProduct(id, formData);
+            return result.product;
+        } catch (err) {
+            setError(err?.response?.data?.message || err?.response?.data?.error || err.message || "Failed to update product");
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return {
         handleAddProducts,
         handlegetSellerProducts,
         handleGetAllProducts,
         handleGetProductById,
+        handleUpdateProduct,
         loading,
         error
     };

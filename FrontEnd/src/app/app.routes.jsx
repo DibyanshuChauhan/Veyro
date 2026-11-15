@@ -2,6 +2,7 @@ import { createBrowserRouter } from "react-router-dom";
 import Register from "../features/auth/pages/Register";
 import Login from "../features/auth/pages/Login";
 import CreateProduct from "../features/seller/pages/CreateProduct";
+import EditProduct from "../features/seller/pages/EditProduct";
 import Dashboard from "../features/seller/pages/Dashboard";
 import BuyerHome from "../features/buyer/pages/BuyerHome";
 import ProductDetail from "../features/buyer/pages/ProductDetail";
@@ -48,6 +49,14 @@ export const routes = createBrowserRouter([
             {
                 path: "/products/create",
                 element: <CreateProduct />
+            },
+            {
+                path: "/products/edit/:id",
+                element: <EditProduct />
+            },
+            {
+                path: "/seller/products/edit/:id",
+                element: <EditProduct />
             }
         ]
     },
