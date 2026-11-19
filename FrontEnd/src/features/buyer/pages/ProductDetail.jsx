@@ -6,6 +6,17 @@ import { useAuth } from "../../auth/hook/useAuth";
 import AuthHeader from "../../auth/components/AuthHeader";
 import AuthFooter from "../../auth/components/AuthFooter";
 
+// Returns the color label for an edition button (avoids repeating sizes)
+const getVariantColor = (v, idx) => {
+  if (!v?.attributes) return `Edition ${idx + 1}`;
+  const attrs = v.attributes instanceof Map ? Object.fromEntries(v.attributes) : v.attributes;
+  const color = attrs.Color || attrs.color || attrs.Colour || attrs.colour;
+  const size = attrs.Size || attrs.size;
+  // If color was mistakenly typed in the size field
+  if (color && size && /^\d/.test(color)) return size;
+  return color || size || `Edition ${idx + 1}`;
+};
+
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -319,14 +330,6 @@ export default function ProductDetail() {
                       </button>
 
                       {product.variants.map((v, idx) => {
-                        const attrSummary = v.attributes
-                          ? (v.attributes instanceof Map
-                              ? Array.from(v.attributes.entries())
-                              : Object.entries(v.attributes))
-                              .map(([k, val]) => `${k}: ${val}`)
-                              .join(" • ")
-                          : "";
-                        const label = attrSummary || `Edition ${idx + 1}`;
                         const isSelected = selectedVariantIndex === idx;
 
                         return (
@@ -343,17 +346,19 @@ export default function ProductDetail() {
                                 : "border-[#27272a] bg-[#101014] text-[#a1a1aa] hover:border-[#d4af37]/50 hover:text-[#f4f4f5]"
                             }`}
                           >
-                            {label}
+                            {getVariantColor(v, idx)}
                           </button>
                         );
                       })}
                     </div>
 
-                    {activeVariant && activeVariant.attributes && (
+                    {/* Active Variant Attributes (Color & Size) */}
+                    {activeVariant?.attributes && (
                       <div className="flex flex-wrap gap-2 pt-1">
-                        {(activeVariant.attributes instanceof Map
-                          ? Array.from(activeVariant.attributes.entries())
-                          : Object.entries(activeVariant.attributes)
+                        {Object.entries(
+                          activeVariant.attributes instanceof Map
+                            ? Object.fromEntries(activeVariant.attributes)
+                            : activeVariant.attributes
                         ).map(([k, val], i) => (
                           <span
                             key={i}

@@ -132,21 +132,46 @@ export default function EditProduct() {
   };
 
   const addVariant = () => {
-    setVariants((prev) => [
-      ...prev,
-      {
+    setVariants((prev) => {
+      const lastVariant = prev[prev.length - 1];
+      const prevSize =
+        lastVariant?.attributes?.find((a) => /size/i.test(a.key))?.value || "";
+
+      return [
+        ...prev,
+        {
+          id: Date.now() + Math.random().toString(),
+          stock: lastVariant ? lastVariant.stock : "1",
+          priceAmount: lastVariant?.priceAmount || formData.priceAmount || "",
+          priceCurrency: lastVariant?.priceCurrency || formData.priceCurrency || "INR",
+          attributes: [
+            { key: "Color", value: "" },
+            { key: "Size", value: prevSize }
+          ],
+          existingImages: [],
+          newImages: []
+        }
+      ];
+    });
+  };
+
+  const duplicateVariant = (variantIndex) => {
+    setVariants((prev) => {
+      const source = prev[variantIndex];
+      if (!source) return prev;
+      const clone = {
         id: Date.now() + Math.random().toString(),
-        stock: "1",
-        priceAmount: formData.priceAmount || "",
-        priceCurrency: formData.priceCurrency || "INR",
-        attributes: [
-          { key: "Size", value: "" },
-          { key: "Color", value: "" }
-        ],
-        existingImages: [],
+        stock: source.stock,
+        priceAmount: source.priceAmount,
+        priceCurrency: source.priceCurrency,
+        attributes: source.attributes.map((a) => ({ ...a })),
+        existingImages: [...(source.existingImages || [])],
         newImages: []
-      }
-    ]);
+      };
+      const copy = [...prev];
+      copy.splice(variantIndex + 1, 0, clone);
+      return copy;
+    });
   };
 
   const removeVariant = (variantIndex) => {
@@ -622,13 +647,22 @@ export default function EditProduct() {
                               <span className="text-[10px] font-bold tracking-[0.2em] text-[#f2ca50] uppercase">
                                 Variant Edition #{String(vIdx + 1).padStart(2, "0")}
                               </span>
-                              <button
-                                type="button"
-                                onClick={() => removeVariant(vIdx)}
-                                className="text-[10px] tracking-wider text-[#ffb4ab] hover:underline uppercase cursor-pointer"
-                              >
-                                Remove Variant
-                              </button>
+                              <div className="flex items-center gap-3">
+                                <button
+                                  type="button"
+                                  onClick={() => duplicateVariant(vIdx)}
+                                  className="text-[10px] tracking-wider text-[#d4af37] hover:underline uppercase cursor-pointer"
+                                >
+                                  + Duplicate
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => removeVariant(vIdx)}
+                                  className="text-[10px] tracking-wider text-[#ffb4ab] hover:underline uppercase cursor-pointer"
+                                >
+                                  Remove Variant
+                                </button>
+                              </div>
                             </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
