@@ -6,6 +6,7 @@ import EditProduct from "../features/seller/pages/EditProduct";
 import Dashboard from "../features/seller/pages/Dashboard";
 import BuyerHome from "../features/buyer/pages/BuyerHome";
 import ProductDetail from "../features/buyer/pages/ProductDetail";
+import CartPage from "../features/cart/pages/CartPage";
 import { SellerRoute, GuestRoute } from "../features/auth/components/ProtectedRoute";
 import Unauthorized from "./Unauthorized";
 
@@ -13,6 +14,10 @@ export const routes = createBrowserRouter([
     {
         path: "/",
         element: <BuyerHome />
+    },
+    {
+        path: "/cart",
+        element: <CartPage />
     },
     {
         path: "/products/:id",

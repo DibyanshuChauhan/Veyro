@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useProduct } from "../../products/hook/useProduct";
 import { useAuth } from "../../auth/hook/useAuth";
+import { useCart } from "../../cart/hook/useCart";
 import AuthHeader from "../../auth/components/AuthHeader";
 import AuthFooter from "../../auth/components/AuthFooter";
 
@@ -20,8 +21,11 @@ const getVariantColor = (v, idx) => {
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { handleGetProductById, loading, error } = useProduct();
+  const { handleAddToCart, loading: cartLoading } = useCart();
+  const [addingToCart, setAddingToCart] = useState(false);
 
   const catalogProducts = useSelector((state) => state.product.catalogProducts);
   const cachedProduct = useMemo(
@@ -34,6 +38,10 @@ export default function ProductDetail() {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [copiedId, setCopiedId] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
+
+  // Modals
+  const [buyNowModalOpen, setBuyNowModalOpen] = useState(false);
+  const [buyNowSuccess, setBuyNowSuccess] = useState(false);
   const [inquiryModalOpen, setInquiryModalOpen] = useState(false);
   const [inquirySuccess, setInquirySuccess] = useState(false);
 
@@ -43,7 +51,7 @@ export default function ProductDetail() {
         .then((data) => {
           if (data) setProduct(data);
         })
-        .catch(() => {});
+        .catch(() => { });
     }
   }, [id]);
 
@@ -52,6 +60,13 @@ export default function ProductDetail() {
       setProduct(cachedProduct);
     }
   }, [cachedProduct, product]);
+
+  // Open Buy Now modal directly if arriving with ?buyNow=1
+  useEffect(() => {
+    if (location.search.includes("buyNow=1")) {
+      setBuyNowModalOpen(true);
+    }
+  }, [location.search]);
 
   const activeVariant = useMemo(() => {
     if (selectedVariantIndex >= 0 && product?.variants?.[selectedVariantIndex]) {
@@ -113,6 +128,49 @@ export default function ProductDetail() {
       setInquirySuccess(false);
       setInquiryModalOpen(false);
     }, 2800);
+  };
+
+  // Dedicated "Buy Now" handler (Direct Instant Purchase - NEVER touches cart)
+  const handleBuyNowClick = () => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    setBuyNowModalOpen(true);
+  };
+
+  const handleBuyNowSubmit = (e) => {
+    e.preventDefault();
+    setBuyNowSuccess(true);
+    setTimeout(() => {
+      setBuyNowSuccess(false);
+      setBuyNowModalOpen(false);
+    }, 3200);
+  };
+
+  // Dedicated "Add to Cart" handler (ONLY this adds specific piece to cart & triggers toast)
+  const handleCartAdd = async () => {
+    if (!product?._id) return;
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
+    setAddingToCart(true);
+    const variantId = activeVariant?._id || (selectedVariantIndex >= 0 ? product?.variants?.[selectedVariantIndex]?._id : null);
+    await handleAddToCart({
+      productId: product._id,
+      variantId,
+      quantity: 1,
+      toastMeta: {
+        title: product.title,
+        edition: activeVariant ? getVariantColor(activeVariant, selectedVariantIndex) : "Signature Edition",
+        imageUrl: activeImageUrl,
+        price: (activeVariant?.price || product?.price)?.amount,
+        currency: (activeVariant?.price || product?.price)?.currency || "INR"
+      }
+    });
+    setAddingToCart(false);
   };
 
   return (
@@ -184,13 +242,13 @@ export default function ProductDetail() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 xl:gap-16 items-start">
             {/* Left: Gallery Stage */}
             <div className="lg:col-span-7 xl:col-span-7 space-y-4">
-              {/* Main High-Res Frame */}
-              <div className="relative aspect-[3/4] bg-[#0c0c10] border border-[#232329] overflow-hidden champagne-glow flex items-center justify-center">
+              {/* Main High-Res Frame with Studio Contrast & Full Garment View */}
+              <div className="relative aspect-[3/4] max-h-[660px] w-full bg-[radial-gradient(ellipse_at_center,_#1c1c26_0%,_#0f0f14_60%,_#07070a_100%)] border border-[#232329] overflow-hidden champagne-glow flex items-center justify-center">
                 {activeImageUrl ? (
                   <img
                     src={activeImageUrl}
                     alt={`${product.title} - Frame ${activeImageIndex + 1}`}
-                    className="w-full h-full object-cover object-top transition-transform duration-700 ease-out hover:scale-102"
+                    className="w-full h-full object-contain p-3 sm:p-6 transition-transform duration-500 hover:scale-105"
                   />
                 ) : (
                   <div className="text-center p-8 space-y-2">
@@ -248,11 +306,10 @@ export default function ProductDetail() {
                       key={idx}
                       type="button"
                       onClick={() => setActiveImageIndex(idx)}
-                      className={`relative aspect-[3/4] border overflow-hidden transition-all duration-200 cursor-pointer ${
-                        activeImageIndex === idx
-                          ? "border-[#d4af37] ring-1 ring-[#d4af37]/60 shadow-[0_0_15px_rgba(212,175,55,0.25)]"
-                          : "border-[#27272a] opacity-50 hover:opacity-100 hover:border-[#71717a]"
-                      }`}
+                      className={`relative aspect-[3/4] border overflow-hidden transition-all duration-200 cursor-pointer ${activeImageIndex === idx
+                        ? "border-[#d4af37] ring-1 ring-[#d4af37]/60 shadow-[0_0_15px_rgba(212,175,55,0.25)]"
+                        : "border-[#27272a] opacity-50 hover:opacity-100 hover:border-[#71717a]"
+                        }`}
                     >
                       <img
                         src={img.url}
@@ -320,11 +377,10 @@ export default function ProductDetail() {
                           setSelectedVariantIndex(-1);
                           setActiveImageIndex(0);
                         }}
-                        className={`px-3 py-2 border text-[10px] font-semibold tracking-[0.18em] uppercase transition-all cursor-pointer ${
-                          selectedVariantIndex === -1
-                            ? "border-[#d4af37] bg-[#d4af37] text-[#09090b]"
-                            : "border-[#27272a] bg-[#101014] text-[#a1a1aa] hover:border-[#d4af37]/50 hover:text-[#f4f4f5]"
-                        }`}
+                        className={`px-3 py-2 border text-[10px] font-semibold tracking-[0.18em] uppercase transition-all cursor-pointer ${selectedVariantIndex === -1
+                          ? "border-[#d4af37] bg-[#d4af37] text-[#09090b]"
+                          : "border-[#27272a] bg-[#101014] text-[#a1a1aa] hover:border-[#d4af37]/50 hover:text-[#f4f4f5]"
+                          }`}
                       >
                         Signature Edition
                       </button>
@@ -340,11 +396,10 @@ export default function ProductDetail() {
                               setSelectedVariantIndex(idx);
                               setActiveImageIndex(0);
                             }}
-                            className={`px-3 py-2 border text-[10px] font-semibold tracking-[0.18em] uppercase transition-all cursor-pointer ${
-                              isSelected
-                                ? "border-[#d4af37] bg-[#d4af37] text-[#09090b]"
-                                : "border-[#27272a] bg-[#101014] text-[#a1a1aa] hover:border-[#d4af37]/50 hover:text-[#f4f4f5]"
-                            }`}
+                            className={`px-3 py-2 border text-[10px] font-semibold tracking-[0.18em] uppercase transition-all cursor-pointer ${isSelected
+                              ? "border-[#d4af37] bg-[#d4af37] text-[#09090b]"
+                              : "border-[#27272a] bg-[#101014] text-[#a1a1aa] hover:border-[#d4af37]/50 hover:text-[#f4f4f5]"
+                              }`}
                           >
                             {getVariantColor(v, idx)}
                           </button>
@@ -458,24 +513,29 @@ export default function ProductDetail() {
                 </div>
               </div>
 
-              {/* Action Buttons */}
+              {/* Action Buttons: Strict separation of Buy Now and Add to Cart */}
               <div className="space-y-3 pt-2">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* BUY NOW: Directly opens Instant Purchase (NEVER touches cart!) */}
                   <button
                     type="button"
+                    onClick={handleBuyNowClick}
                     className="w-full py-4 bg-[#d4af37] text-[#09090b] text-[11px] font-bold tracking-[0.28em] uppercase hover:bg-[#f2ca50] hover:shadow-[0_0_30px_rgba(242,202,80,0.3)] transition-all cursor-pointer"
                   >
                     Buy Now
                   </button>
 
+                  {/* ADD TO CART: ONLY this adds specific piece to cart & triggers toast */}
                   <button
                     type="button"
-                    className="w-full py-4 border border-[#d4af37]/60 hover:bg-[#d4af37]/10 text-[#f2ca50] text-[11px] font-bold tracking-[0.28em] uppercase transition-all cursor-pointer flex items-center justify-center gap-2"
+                    disabled={cartLoading || addingToCart}
+                    onClick={handleCartAdd}
+                    className="w-full py-4 border border-[#d4af37]/60 hover:bg-[#d4af37]/10 text-[#f2ca50] text-[11px] font-bold tracking-[0.28em] uppercase transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                     </svg>
-                    <span>Add to Cart</span>
+                    <span>{addingToCart ? "Allocating..." : "Add to Cart"}</span>
                   </button>
                 </div>
 
@@ -616,6 +676,140 @@ export default function ProductDetail() {
                   className="w-full py-4 bg-[#d4af37] text-[#09090b] text-[11px] font-bold tracking-[0.28em] uppercase hover:bg-[#f2ca50] transition-colors cursor-pointer"
                 >
                   Submit Acquisition Request
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* INSTANT DIRECT "BUY NOW" ALLOCATION MODAL (Does not affect cart) */}
+      {buyNowModalOpen && product && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#060608]/90 backdrop-blur-md">
+          <div className="bg-[#0f0f14] border border-[#d4af37]/50 w-full max-w-xl p-6 sm:p-8 relative shadow-[0_0_50px_rgba(0,0,0,0.85)] max-h-[90vh] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-[#0c0c10] [&::-webkit-scrollbar-thumb]:bg-[#2c2c36]">
+            <button
+              type="button"
+              onClick={() => setBuyNowModalOpen(false)}
+              className="absolute top-4 right-4 text-[#71717a] hover:text-[#f4f4f5] p-2 cursor-pointer text-sm"
+              title="Close"
+            >
+              ✕
+            </button>
+
+            <span className="text-[10px] font-bold tracking-[0.25em] text-[#d4af37] uppercase block mb-1">
+              Direct Acquisition · Instant Checkout
+            </span>
+            <h3 className="font-serif-luxury text-2xl text-[#f4f4f5] mb-2">
+              Instant Piece Allocation
+            </h3>
+            <p className="text-xs text-[#a1a1aa] font-light mb-5">
+              Secure immediate private allocation directly from the atelier without adding to your archive cart.
+            </p>
+
+            {buyNowSuccess ? (
+              <div className="p-8 bg-[#09090d] border border-[#d4af37] text-center space-y-3">
+                <div className="w-12 h-12 rounded-full border border-[#d4af37] text-[#d4af37] flex items-center justify-center mx-auto text-xl">
+                  ✓
+                </div>
+                <h4 className="font-serif-luxury text-xl text-[#f2ca50]">Acquisition Confirmed</h4>
+                <p className="text-xs text-[#d4d4d8] font-light max-w-md mx-auto leading-relaxed">
+                  Your direct order for <strong>{product.title}</strong> has been registered. An encrypted atelier dispatch dossier has been routed to your contact.
+                </p>
+                <div className="pt-2">
+                  <span className="text-[10px] font-mono text-[#71717a] uppercase tracking-wider block">
+                    Protocol #{Math.random().toString(36).substring(2, 9).toUpperCase()} · White-Glove Courier Dispatched
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleBuyNowSubmit} className="space-y-4">
+                {/* Product Summary Card */}
+                <div className="p-3.5 bg-[#09090c] border border-[#22222c] flex items-center gap-4">
+                  <div className="w-16 h-20 bg-[#121217] border border-[#272732] shrink-0 overflow-hidden flex items-center justify-center">
+                    {activeImageUrl ? (
+                      <img src={activeImageUrl} alt={product.title} className="w-full h-full object-contain p-1" />
+                    ) : (
+                      <span className="text-[8px] text-[#71717a]">NO IMAGE</span>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <span className="text-[9px] font-mono text-[#d4af37] uppercase block truncate">
+                      {product.seller?.fullname || "Partner Atelier"}
+                    </span>
+                    <h5 className="font-serif-luxury text-sm text-[#f4f4f5] truncate">{product.title}</h5>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-xs font-mono font-semibold text-[#f2ca50]">{formattedPrice}</span>
+                      {activeVariant && (
+                        <span className="text-[9px] px-1.5 py-0.5 bg-[#171720] border border-[#2b2b38] text-[#a1a1aa] font-mono">
+                          {getVariantColor(activeVariant, selectedVariantIndex)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Delivery Information */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-bold tracking-[0.2em] text-[#a1a1aa] uppercase">
+                      Client Full Name
+                    </label>
+                    <input
+                      type="text"
+                      defaultValue={user?.fullname || ""}
+                      placeholder="e.g. Julian Vance"
+                      required
+                      className="w-full bg-[#0a0a0d] border border-[#262630] text-xs text-[#f4f4f5] p-3 focus:outline-none focus:border-[#d4af37]"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-bold tracking-[0.2em] text-[#a1a1aa] uppercase">
+                      Contact Phone / Email
+                    </label>
+                    <input
+                      type="text"
+                      defaultValue={user?.email || user?.contact || ""}
+                      placeholder="Contact details"
+                      required
+                      className="w-full bg-[#0a0a0d] border border-[#262630] text-xs text-[#f4f4f5] p-3 focus:outline-none focus:border-[#d4af37]"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[9px] font-bold tracking-[0.2em] text-[#a1a1aa] uppercase">
+                    Delivery Address & City
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Private residence address, suite, city, postal code"
+                    required
+                    className="w-full bg-[#0a0a0d] border border-[#262630] text-xs text-[#f4f4f5] p-3 focus:outline-none focus:border-[#d4af37]"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[9px] font-bold tracking-[0.2em] text-[#a1a1aa] uppercase">
+                    Settlement Method
+                  </label>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <label className="p-3 bg-[#0a0a0d] border border-[#d4af37] flex items-center gap-2 cursor-pointer text-[#f4f4f5]">
+                      <input type="radio" name="payment" defaultChecked className="accent-[#d4af37]" />
+                      <span>White-Glove Delivery COD</span>
+                    </label>
+                    <label className="p-3 bg-[#0a0a0d] border border-[#262630] hover:border-[#71717a] flex items-center gap-2 cursor-pointer text-[#a1a1aa]">
+                      <input type="radio" name="payment" className="accent-[#d4af37]" />
+                      <span>Vault Wire / Escrow</span>
+                    </label>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-4 bg-[#d4af37] hover:bg-[#f2ca50] text-[#09090b] text-[11px] font-bold tracking-[0.28em] uppercase transition-all shadow-[0_0_25px_rgba(212,175,55,0.25)] cursor-pointer mt-2"
+                >
+                  Confirm Instant Direct Purchase
                 </button>
               </form>
             )}

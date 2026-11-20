@@ -1,8 +1,39 @@
 import { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useCart } from "../../cart/hook/useCart";
+import { useAuth } from "../../auth/hook/useAuth";
 
 export default function BuyerProductCard({ product }) {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { handleAddToCart, loading: cartLoading } = useCart();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [adding, setAdding] = useState(false);
+
+  const handleCartAdd = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!product?._id) return;
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    setAdding(true);
+    const firstVariantId = product?.variants?.[0]?._id || null;
+    await handleAddToCart({
+      productId: product._id,
+      variantId: firstVariantId,
+      quantity: 1,
+      toastMeta: {
+        title: product.title,
+        edition: product.seller?.fullname || "Archival Atelier",
+        imageUrl: activeImageUrl,
+        price: product.price?.amount,
+        currency: product.price?.currency
+      }
+    });
+    setAdding(false);
+  };
 
   const images = useMemo(() => {
     if (!product?.images || !Array.isArray(product.images)) return [];
@@ -51,9 +82,8 @@ export default function BuyerProductCard({ product }) {
                   e.stopPropagation();
                   setActiveImageIndex(idx);
                 }}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  activeImageIndex === idx ? "bg-[#d4af37] w-4" : "bg-[#f4f4f5]/40 hover:bg-[#f4f4f5]"
-                }`}
+                className={`w-2 h-2 rounded-full transition-all ${activeImageIndex === idx ? "bg-[#d4af37] w-4" : "bg-[#f4f4f5]/40 hover:bg-[#f4f4f5]"
+                  }`}
               />
             ))}
           </div>
@@ -85,20 +115,29 @@ export default function BuyerProductCard({ product }) {
 
         <div className="pt-2 border-t border-[#202026] space-y-2">
           <div className="grid grid-cols-2 gap-2">
+            {/* BUY NOW: Directly navigates to Product page instant buy, DOES NOT touch cart */}
             <button
               type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                navigate(`/products/${product._id}?buyNow=1`);
+              }}
               className="py-2.5 px-3 bg-[#d4af37] hover:bg-[#f2ca50] text-[#09090b] text-[10px] font-bold tracking-[0.2em] uppercase transition-colors cursor-pointer text-center"
             >
               Buy Now
             </button>
+            {/* ADD TO CART: ONLY this button adds to cart & triggers toast */}
             <button
               type="button"
-              className="py-2.5 px-3 border border-[#d4af37]/60 hover:bg-[#d4af37]/10 text-[#f2ca50] text-[10px] font-semibold tracking-[0.16em] uppercase transition-colors cursor-pointer flex items-center justify-center gap-1.5"
+              disabled={cartLoading || adding}
+              onClick={(e) => handleCartAdd(e)}
+              className="py-2.5 px-3 border border-[#d4af37]/60 hover:bg-[#d4af37]/10 text-[#f2ca50] text-[10px] font-semibold tracking-[0.16em] uppercase transition-colors cursor-pointer flex items-center justify-center gap-1.5 disabled:opacity-60"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
               </svg>
-              <span>Add to Cart</span>
+              <span>{adding ? "Adding..." : "Add to Cart"}</span>
             </button>
           </div>
           <Link

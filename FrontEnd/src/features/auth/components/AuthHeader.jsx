@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../state/auth.slice";
+import { useCart } from "../../cart/hook/useCart";
+import CartToast from "../../cart/components/CartToast";
 
 export default function AuthHeader({ actionLabel, actionTo }) {
   const user = useSelector((state) => state.auth.user);
@@ -11,6 +13,13 @@ export default function AuthHeader({ actionLabel, actionTo }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const isSeller = Boolean(user && (user.role === "seller" || user.isSeller === true));
+  const { totalItems, handleGetCart } = useCart();
+
+  useEffect(() => {
+    if (user && !isSeller) {
+      handleGetCart();
+    }
+  }, [user, isSeller, handleGetCart]);
 
   const handleSignOut = () => {
     dispatch(logout());
@@ -97,7 +106,26 @@ export default function AuthHeader({ actionLabel, actionTo }) {
         </nav>
 
         {/* User controls / Auth actions */}
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-3 sm:space-x-4">
+          {/* Cart Trigger for Buyers / Clients: Links directly to dedicated /cart page */}
+          {!isSeller && (
+            <Link
+              to="/cart"
+              className="relative p-2 text-[#a1a1aa] hover:text-[#f2ca50] transition-colors cursor-pointer flex items-center justify-center group"
+              title="View Archival Bag"
+              aria-label="View Archival Bag"
+            >
+              <svg className="w-5 h-5 transition-transform duration-200 group-hover:scale-105" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              </svg>
+              {totalItems > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-[#d4af37] text-[#09090b] text-[9px] font-bold flex items-center justify-center font-mono leading-none shadow-[0_0_10px_rgba(212,175,55,0.6)]">
+                  {totalItems}
+                </span>
+              )}
+            </Link>
+          )}
+
           {user ? (
             <div className="flex items-center gap-3">
               {/* Distinct Badge: Seller vs Buyer Client */}
@@ -207,6 +235,9 @@ export default function AuthHeader({ actionLabel, actionTo }) {
           )}
         </div>
       )}
+
+      {/* Haute Couture Toast Notification (Replaces intrusive drawer popup) */}
+      <CartToast />
     </header>
   );
 }
