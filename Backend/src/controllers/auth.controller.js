@@ -132,3 +132,23 @@ export const getCurrentUser = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 }
+
+/**
+ * Log out user by clearing the HTTP-only authentication token cookie.
+ */
+export const logoutUser = async (req, res) => {
+    try {
+        res.clearCookie("token", {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict"
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: "User logged out successfully"
+        });
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
+    }
+};

@@ -1,18 +1,15 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
-import { logout } from "../state/auth.slice";
+import { useAuth } from "../hook/useAuth";
 import { useCart } from "../../cart/hook/useCart";
 import CartToast from "../../cart/components/CartToast";
 
 export default function AuthHeader({ actionLabel, actionTo }) {
-  const user = useSelector((state) => state.auth.user);
-  const dispatch = useDispatch();
+  const { user, isSeller, handleLogout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const isSeller = Boolean(user && (user.role === "seller" || user.isSeller === true));
   const { totalItems, handleGetCart } = useCart();
 
   useEffect(() => {
@@ -21,8 +18,8 @@ export default function AuthHeader({ actionLabel, actionTo }) {
     }
   }, [user, isSeller, handleGetCart]);
 
-  const handleSignOut = () => {
-    dispatch(logout());
+  const handleSignOut = async () => {
+    await handleLogout();
     setMobileMenuOpen(false);
     navigate("/login");
   };

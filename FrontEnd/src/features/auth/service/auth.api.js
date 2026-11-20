@@ -32,3 +32,11 @@ export const getCurrentUser = async () => {
     const response = await api.get("/me");
     return response.data;
 }
+
+/**
+ * Log out user by clearing the HTTP-only authentication cookie on the backend.
+ */
+export const logoutUserApi = async () => {
+    const response = await api.post("/logout");
+    return response.data;
+}

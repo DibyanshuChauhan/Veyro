@@ -1,5 +1,6 @@
 import { setError, setLoading, setUser, setSessionValidated, logout } from "../state/auth.slice";
-import { loginuser, registerUser, getCurrentUser } from "../service/auth.api";
+import { loginuser, registerUser, getCurrentUser, logoutUserApi } from "../service/auth.api";
+import { resetCart } from "../../cart/state/cart.slice";
 import { useDispatch, useSelector } from "react-redux";
 
 export const useAuth = () => {
@@ -79,8 +80,21 @@ export const useAuth = () => {
         }
     }
 
-    function handleLogout() {
-        dispatch(logout());
+    /**
+     * Terminate user session both on backend (clearing HTTP-only cookie)
+     * and in client state (clearing user and cart).
+     */
+    async function handleLogout() {
+        try {
+            dispatch(setLoading(true));
+            await logoutUserApi();
+        } catch (err) {
+            console.error("Backend session logout error:", err);
+        } finally {
+            dispatch(logout());
+            dispatch(resetCart());
+            dispatch(setLoading(false));
+        }
     }
 
     return {

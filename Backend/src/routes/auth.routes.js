@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { ValidateLoginUser, ValidateRegisterUser } from "../validator/auth.validator.js";
-import { getCurrentUser, GoogleAuthCallback, LoginUser, registerUser } from "../controllers/auth.controller.js";
+import { getCurrentUser, GoogleAuthCallback, LoginUser, registerUser, logoutUser } from "../controllers/auth.controller.js";
 import passport from "passport";
 import { authenticateUser } from "../middleware/auth.middleware.js";
 
@@ -23,6 +23,11 @@ authRouter.post("/register", ValidateRegisterUser, registerUser);
  * @param {string} password Secret account password
  */
 authRouter.post("/login", ValidateLoginUser, LoginUser);
+
+/**
+ * Log out user and clear authentication session cookie.
+ */
+authRouter.post("/logout", logoutUser);
 
 /**
  * Initiate Google OAuth authentication flow.
