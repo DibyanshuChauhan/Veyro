@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import productModel from "../models/product.model.js";
+import * as productDAO from "../dao/product.dao.js";
 import { uploadFile } from "../services/storage.service.js";
 
 export const createProduct = async (req, res) => {
@@ -87,13 +87,14 @@ export const createProduct = async (req, res) => {
             }
         }
 
-        const product = await productModel.create({
+        const product = await productDAO.createProduct({
             title,
             description,
             price: {
                 amount: priceAmount,
                 currency: priceCurrency || "INR"
             },
+            stock: Number(req.body.stock) >= 0 ? Number(req.body.stock) : 0,
             images,
             variants: processedVariants,
             seller: seller._id
@@ -117,7 +118,7 @@ export const getProductsBySeller = async (req, res) => {
 const seller = req.user;
 
     try {
-        const products = await productModel.find({ seller: seller._id });
+        const products = await productDAO.findProductsBySeller(seller._id);
         res.status(200).json({
             message: "Products fetched successfully",
             success: true,
@@ -135,7 +136,7 @@ const seller = req.user;
 
 export const getAllProducts = async (req, res) => {
     try {
-        const products = await productModel.find({}).populate("seller", "fullname email contact").sort({ createdAt: -1 });
+        const products = await productDAO.findAllProducts();
         res.status(200).json({
             message: "All archival products fetched successfully",
             success: true,
@@ -161,7 +162,7 @@ export const getProductById = async (req, res) => {
     }
 
     try {
-        const product = await productModel.findById(id).populate("seller", "fullname email contact");
+        const product = await productDAO.findProductById(id, true);
         if (!product) {
             return res.status(404).json({
                 message: "Archival product not found",
@@ -196,7 +197,7 @@ export const updateProduct = async (req, res) => {
     }
 
     try {
-        const product = await productModel.findById(id);
+        const product = await productDAO.findProductById(id);
         if (!product) {
             return res.status(404).json({
                 message: "Archival product not found",
@@ -227,6 +228,9 @@ export const updateProduct = async (req, res) => {
 
         if (title) product.title = title;
         if (description) product.description = description;
+        if (req.body.stock !== undefined) {
+            product.stock = Number(req.body.stock) >= 0 ? Number(req.body.stock) : 0;
+        }
         if (priceAmount) {
             product.price = {
                 amount: priceAmount,

@@ -20,6 +20,7 @@ export default function EditProduct() {
     description: "",
     priceAmount: "",
     priceCurrency: "INR",
+    stock: "1",
   });
   const [existingImages, setExistingImages] = useState([]);
   const [newImages, setNewImages] = useState([]);
@@ -40,6 +41,7 @@ export default function EditProduct() {
               description: prod.description || "",
               priceAmount: prod.price?.amount ? String(prod.price.amount) : "",
               priceCurrency: prod.price?.currency || "INR",
+              stock: prod.stock !== undefined ? String(prod.stock) : "1",
             });
             const imgs = Array.isArray(prod.images)
               ? prod.images.map((img) => (typeof img === "string" ? img : img?.url)).filter(Boolean)
@@ -310,6 +312,7 @@ export default function EditProduct() {
       data.append("description", formData.description.trim());
       data.append("priceAmount", parsedAmount.toString());
       data.append("priceCurrency", formData.priceCurrency);
+      data.append("stock", (Number(formData.stock) >= 0 ? Number(formData.stock) : 0).toString());
 
       if (newImages.length > 0) {
         newImages.forEach((item) => {
@@ -472,8 +475,8 @@ export default function EditProduct() {
                     </div>
                   </div>
 
-                  {/* Fields 3 & 4: Price & Currency */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  {/* Fields 3, 4 & 5: Price, Currency & Stock */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <label
                         htmlFor="priceAmount"
@@ -525,6 +528,28 @@ export default function EditProduct() {
                         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[#71717a] pointer-events-none text-xs">
                           ▼
                         </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="stock"
+                        className="block text-[10px] font-semibold tracking-[0.25em] text-[#a1a1aa] uppercase"
+                      >
+                        Atelier Stock Count
+                      </label>
+                      <div className="relative flex items-center border border-[#27272a] bg-[#0c0c0f] focus-within:border-[#d4af37] focus-within:ring-1 focus-within:ring-[#d4af37]/30 transition-all duration-200">
+                        <input
+                          id="stock"
+                          name="stock"
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={formData.stock || ""}
+                          onChange={handleChange}
+                          placeholder="e.g. 10"
+                          className="w-full bg-transparent py-3.5 px-4 text-sm text-[#f4f4f5] placeholder:text-[#52525b] border-0 focus:outline-none focus:ring-0 tracking-wide font-light"
+                        />
                       </div>
                     </div>
                   </div>

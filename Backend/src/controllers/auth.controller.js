@@ -1,4 +1,8 @@
-import userModel from "../models/user.model.js"; 
+import {
+    findUserByEmail,
+    findUserByEmailOrContact,
+    createUser
+} from "../dao/user.dao.js";
 import jwt from "jsonwebtoken";
 import { config } from "../config/config.js";
 
@@ -33,9 +37,7 @@ export const registerUser = async (req, res) => {
     const { email, contact, password, fullname, isSeller } = req.body;
     try {
 
-        const existingUser = await userModel.findOne({
-            $or: [{ email }, { contact }]
-        });
+        const existingUser = await findUserByEmailOrContact(email, contact);
 
         if (existingUser) {
             return res.status(400).json({ 
@@ -43,7 +45,7 @@ export const registerUser = async (req, res) => {
 });
         }
 
-        const user = await userModel.create({
+        const user = await createUser({
             email,
             contact,
             password,
@@ -63,7 +65,7 @@ export const LoginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-    const user = await userModel.findOne({ email });
+        const user = await findUserByEmail(email);
         if (!user) {
             return res.status(400).json({ error: "Invalid email or password"});
         }
@@ -89,9 +91,9 @@ export const GoogleAuthCallback = async (req, res) => {
             return res.redirect(`${config.FRONTEND_URL}/login?error=google_email_unavailable`);
         }
 
-        let user = await userModel.findOne({ email });
+        let user = await findUserByEmail(email);
         if (!user) {
-            user = await userModel.create({
+            user = await createUser({
                 email,
                 fullname: profile.displayName || email.split("@")[0],
                 role: "buyer"
